@@ -1,6 +1,8 @@
 import { Settings } from './types';
 import { getTodayISO } from './utils/dateUtils';
 
+export const APP_VERSION = '1.0.1';
+
 export const DEFAULT_SETTINGS: Settings = {
   weekdayBudget: 0, // Default to 0 so it's not set by default
   weekendBudget: 0, // Default to 0 so it's not set by default

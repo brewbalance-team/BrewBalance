@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsType } from '../types';
-import { Save, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Save, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { APP_VERSION } from '../constants';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -35,6 +36,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
     e.preventDefault();
     onReset();
     setShowResetConfirm(false);
+  };
+
+  const handleForceReload = () => {
+    window.location.reload();
   };
 
   return (
@@ -201,12 +206,20 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
                  </div>
                </div>
              )}
-             
-             {!showResetConfirm && (
-               <p className="text-[10px] text-slate-600 text-center mt-3">
-                   This action will permanently delete all your data.
-               </p>
-             )}
+        </div>
+
+        {/* App Version & Reload */}
+        <div className="pt-8 pb-4 text-center">
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mb-2">
+                BrewBalance v{APP_VERSION}
+            </p>
+            <button 
+                type="button"
+                onClick={handleForceReload}
+                className="inline-flex items-center gap-2 text-xs font-bold text-amber-500/80 hover:text-amber-400 transition-colors px-3 py-2 rounded-lg hover:bg-slate-900"
+            >
+                <RefreshCw size={12} /> Force Reload / Update
+            </button>
         </div>
       </form>
     </div>
