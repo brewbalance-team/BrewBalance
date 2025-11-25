@@ -12,25 +12,50 @@ import EditEntryModal from './components/EditEntryModal';
 import { Beer } from 'lucide-react';
 
 const App: React.FC = () => {
+  // Load settings from local storage, merging with defaults to ensure robustness
   const [settings, setSettings] = useState<Settings>(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...DEFAULT_SETTINGS, ...parsed };
+      }
+    } catch (e) {
+      console.error("Failed to load settings:", e);
+    }
+    return DEFAULT_SETTINGS;
   });
 
+  // Load entries from local storage
   const [entries, setEntries] = useState<Entry[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.ENTRIES);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.ENTRIES);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Failed to load entries:", e);
+      return [];
+    }
   });
 
   const [currentTab, setCurrentTab] = useState<TabView>('dashboard');
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 
+  // Persist settings changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    } catch (e) {
+      console.error("Failed to save settings to localStorage (Quota exceeded?):", e);
+    }
   }, [settings]);
 
+  // Persist entries changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(entries));
+    try {
+      localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(entries));
+    } catch (e) {
+      console.error("Failed to save entries to localStorage (Quota exceeded?):", e);
+    }
   }, [entries]);
 
   const statsMap = useMemo(() => {
@@ -88,8 +113,8 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-950 font-sans text-slate-100 flex justify-center">
       <div className="w-full max-w-md h-[100dvh] bg-slate-950 shadow-2xl relative flex flex-col overflow-hidden sm:border-x sm:border-slate-800">
         
-        {/* Header */}
-        <header className="px-6 pt-10 pb-4 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex justify-between items-center border-b border-slate-800 transition-all">
+        {/* Header - Added padding-top safe area for iOS PWA */}
+        <header className="px-6 pt-[max(2.5rem,env(safe-area-inset-top))] pb-4 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex justify-between items-center border-b border-slate-800 transition-all">
           <div className="flex items-center gap-3">
              {settings.logo ? (
                  <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-slate-800">
