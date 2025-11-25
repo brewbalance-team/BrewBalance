@@ -37,6 +37,13 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, isOpen, onClose,
     }
   };
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+      setAmount(val);
+    }
+  };
+
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
@@ -65,12 +72,12 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, isOpen, onClose,
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Amount ({currency})</label>
             <input
-              type="number"
-              autoFocus
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]*"
               placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+              onChange={handleAmountChange}
               className="w-full p-4 text-3xl font-black bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 focus:ring-0 outline-none text-center text-white placeholder-slate-800 transition-all"
             />
           </div>

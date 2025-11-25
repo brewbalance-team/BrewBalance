@@ -21,6 +21,14 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
     }
   };
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow digits and a single decimal point
+    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+      setAmount(val);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col pb-24">
       <div className="mb-4 shrink-0">
@@ -40,11 +48,12 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
                     <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 text-center">Amount ({currency})</label>
                         <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
                         placeholder="0"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                        onChange={handleAmountChange}
                         className="w-full py-3 px-4 text-5xl font-black bg-transparent border-b-2 border-slate-800 focus:border-amber-500 outline-none text-center text-white placeholder-slate-800 transition-colors"
                         />
                     </div>

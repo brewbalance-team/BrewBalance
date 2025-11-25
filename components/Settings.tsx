@@ -21,6 +21,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
   const handleChange = (field: keyof SettingsType, value: any) => {
     setLocalSettings(prev => ({ ...prev, [field]: value }));
   };
+  
+  const handleBudgetChange = (field: keyof SettingsType, value: string) => {
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        // We store it as number in the main state, but input needs handling
+        // We will update the local state with the raw value?
+        // Actually localSettings expects numbers for budgets.
+        // We can parse immediately or handle string interim.
+        // For simplicity, let's parse immediately but allow empty to be 0 or handle separately.
+        const numVal = parseFloat(value);
+        handleChange(field, isNaN(numVal) ? 0 : numVal);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,11 +71,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
               <label className="text-sm font-semibold text-slate-300">Weekday Budget</label>
               <div className="relative group">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*"
                   value={localSettings.weekdayBudget || ''}
                   placeholder="300"
-                  onChange={e => handleChange('weekdayBudget', parseFloat(e.target.value))}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  onChange={e => handleBudgetChange('weekdayBudget', e.target.value)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
                 />
                 <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">{localSettings.currency}</span>
@@ -74,11 +87,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
               <label className="text-sm font-semibold text-slate-300">Weekend Budget</label>
               <div className="relative group">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*"
                   value={localSettings.weekendBudget || ''}
                   placeholder="2000"
-                  onChange={e => handleChange('weekendBudget', parseFloat(e.target.value))}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  onChange={e => handleBudgetChange('weekendBudget', e.target.value)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
                 />
                 <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">{localSettings.currency}</span>

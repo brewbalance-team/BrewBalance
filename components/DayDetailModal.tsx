@@ -38,6 +38,13 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
     }
   };
 
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+      setBudget(val);
+    }
+  };
+
   const handleReset = () => {
     onResetBudget(stats.date);
     onClose();
@@ -109,10 +116,11 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                     </label>
                     <div className="relative">
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
+                            pattern="[0-9]*"
                             value={budget}
-                            onChange={(e) => setBudget(e.target.value)}
-                            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                            onChange={handleBudgetChange}
                             className={`w-full p-4 bg-slate-950 rounded-2xl border-2 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700 ${stats.isCustomBudget ? 'border-amber-500/50' : 'border-slate-800'}`}
                             placeholder="0"
                         />
