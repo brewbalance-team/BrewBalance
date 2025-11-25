@@ -39,7 +39,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   };
 
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+    const val = e.target.value.replace(',', '.');
     if (val === '' || /^\d*\.?\d*$/.test(val)) {
       setBudget(val);
     }
@@ -118,6 +118,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                         <input
                             type="text"
                             inputMode="decimal"
+                            enterKeyHint="done"
                             pattern="[0-9]*"
                             value={budget}
                             onChange={handleBudgetChange}

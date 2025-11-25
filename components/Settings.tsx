@@ -23,13 +23,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
   };
   
   const handleBudgetChange = (field: keyof SettingsType, value: string) => {
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        // We store it as number in the main state, but input needs handling
-        // We will update the local state with the raw value?
-        // Actually localSettings expects numbers for budgets.
-        // We can parse immediately or handle string interim.
-        // For simplicity, let's parse immediately but allow empty to be 0 or handle separately.
-        const numVal = parseFloat(value);
+    // Handle comma for international inputs
+    const cleanVal = value.replace(',', '.');
+    if (cleanVal === '' || /^\d*\.?\d*$/.test(cleanVal)) {
+        const numVal = parseFloat(cleanVal);
         handleChange(field, isNaN(numVal) ? 0 : numVal);
     }
   };
@@ -73,6 +70,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
                 <input
                   type="text"
                   inputMode="decimal"
+                  enterKeyHint="done"
                   pattern="[0-9]*"
                   value={localSettings.weekdayBudget || ''}
                   placeholder="300"
@@ -89,6 +87,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
                 <input
                   type="text"
                   inputMode="decimal"
+                  enterKeyHint="done"
                   pattern="[0-9]*"
                   value={localSettings.weekendBudget || ''}
                   placeholder="2000"
@@ -112,6 +111,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
               <label className="text-sm font-semibold text-slate-300">Currency Symbol</label>
               <input
                 type="text"
+                enterKeyHint="done"
                 value={localSettings.currency}
                 onChange={e => handleChange('currency', e.target.value)}
                 className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-white"

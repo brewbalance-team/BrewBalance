@@ -27,7 +27,7 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+    const val = e.target.value.replace(',', '.');
     if (val === '' || /^\d*\.?\d*$/.test(val)) {
       setAmount(val);
     }
@@ -54,6 +54,7 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
             <input
               type="text"
               inputMode="decimal"
+              enterKeyHint="done"
               pattern="[0-9]*"
               placeholder="0"
               value={amount}
@@ -76,6 +77,7 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note (Optional)</label>
             <input
               type="text"
+              enterKeyHint="done"
               placeholder="e.g., Lager at Pub"
               value={note}
               onChange={(e) => setNote(e.target.value)}

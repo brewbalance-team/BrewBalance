@@ -22,7 +22,8 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+    // Replace comma with dot for international keyboards
+    const val = e.target.value.replace(',', '.');
     // Allow digits and a single decimal point
     if (val === '' || /^\d*\.?\d*$/.test(val)) {
       setAmount(val);
@@ -50,6 +51,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
                         <input
                         type="text"
                         inputMode="decimal"
+                        enterKeyHint="done"
                         pattern="[0-9]*"
                         placeholder="0"
                         value={amount}
@@ -72,6 +74,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Note (Optional)</label>
                         <input
                         type="text"
+                        enterKeyHint="done"
                         placeholder="e.g., Lager at Pub"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
