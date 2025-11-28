@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Flame, TrendingUp, ArrowRight, History } from 'lucide-react';
@@ -96,10 +97,17 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak }) => 
       {/* Main Status Card */}
       <div className={`relative p-6 rounded-[2.5rem] border ${statusDetails.border} ${statusDetails.bg} transition-all duration-500 shadow-lg mb-6`}>
         <div className="flex justify-between items-start mb-2">
-           <div>
+           <div className="space-y-1">
               <h2 className={`text-lg font-black ${statusDetails.text} uppercase tracking-widest`}>{statusDetails.label}</h2>
               {isBudgetSet && (
-                <p className="text-slate-400 text-sm font-medium mt-1">Daily Budget: {currency}{todayStats.baseBudget}</p>
+                <div className="flex flex-col gap-0.5 mt-1">
+                    <p className="text-slate-400/70 text-[10px] font-bold uppercase tracking-wider">
+                        Daily Base Budget: {currency}{todayStats.baseBudget}
+                    </p>
+                    <p className="text-slate-200 text-xs font-bold uppercase tracking-wider">
+                        Daily Cumulative Budget: {currency}{Math.round(todayStats.totalAvailable)}
+                    </p>
+                </div>
               )}
            </div>
            <div className="bg-slate-900/50 p-2 rounded-full border border-white/5 shadow-sm backdrop-blur-sm">
@@ -176,7 +184,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak }) => 
                 </div>
              </div>
 
-             <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-lg flex flex-col justify-between">
+             <div className="bg-slate-950 p-5 rounded-3xl border border-slate-800 shadow-lg flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-slate-500 mb-3">
                     <ArrowRight size={16} />
                     <span className="text-[10px] font-bold uppercase tracking-wider">To Tomorrow</span>
