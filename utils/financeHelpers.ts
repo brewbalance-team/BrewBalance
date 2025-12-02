@@ -34,6 +34,10 @@ export const calculateStats = (
 
   // Tracking variables
   let currentRollover = 0;
+  // This variable holds the rollover from the last normal day before a challenge started.
+  // It effectively "pauses" the balance during a challenge and restores it afterwards.
+  let preservedNormalRollover: number | null = null;
+
   let challengeAccumulatedSavings = 0;
   let currentChallengeId: string | null = null;
 
@@ -64,18 +68,15 @@ export const calculateStats = (
     const challenge = getChallengeForDate(currentDateStr);
     const isChallengeDay = !!challenge;
 
-    // Handle Challenge Context Switching
+    // Handle Challenge Context Switching (for accumulation logic)
     if (isChallengeDay) {
         if (challenge?.id !== currentChallengeId) {
-            // We just entered a new challenge block (or a different one)
-            // Reset the accumulator for this specific challenge
+            // New challenge block
             challengeAccumulatedSavings = 0;
             currentChallengeId = challenge!.id;
         }
     } else {
-        // Not a challenge day
         currentChallengeId = null;
-        // Reset accumulator just to be clean, though it won't be used
         challengeAccumulatedSavings = 0;
     }
 
@@ -104,27 +105,36 @@ export const calculateStats = (
     let statsRollover = 0;
 
     if (isChallengeDay) {
+        // PRESERVE ROLLOVER: If we just entered a challenge (preserved is null), 
+        // capture the current incoming rollover (from the last normal day) to save it.
+        if (preservedNormalRollover === null) {
+            preservedNormalRollover = currentRollover;
+        }
+
         // CHALLENGE MODE LOGIC
-        // 1. Rollover from previous non-challenge days is ignored/cleared. 
-        //    (We effectively start the day with 0 rollover context from the past).
-        // 2. Total Available is strictly the Base Budget.
+        // 1. Available is strictly Base Budget (previous rollover is ignored/preserved).
         totalAvailable = baseBudget; 
         remaining = totalAvailable - spent;
         
-        // 3. Instead of rolling over, we accumulate savings.
+        // 2. Accumulate savings
         challengeAccumulatedSavings += remaining;
 
-        // 4. The rollover passed to the UI is effectively 0 or N/A.
+        // 3. Stats rollover is 0 for UI
         statsRollover = 0;
         
-        // 5. The rollover carried to the *next* day is also 0.
-        //    This effectively clears the "Rollover To Tomorrow" when exiting a challenge too.
+        // 4. Update currentRollover for NEXT iteration to 0 
+        // (Challenges do not pass rollover to the next day within the challenge or immediately after).
         currentRollover = 0;
 
     } else {
         // NORMAL MODE LOGIC
-        // 1. If yesterday was a challenge day, currentRollover is 0 (fresh start).
-        // 2. If yesterday was normal, currentRollover is the carry over.
+        
+        // RESTORE ROLLOVER: If we have a preserved rollover (coming out of a challenge), restore it.
+        if (preservedNormalRollover !== null) {
+            currentRollover = preservedNormalRollover;
+            preservedNormalRollover = null;
+        }
+
         totalAvailable = baseBudget + currentRollover;
         remaining = totalAvailable - spent;
         statsRollover = currentRollover;
@@ -190,7 +200,14 @@ export const calculateStreak = (statsMap: Record<string, DailyStats>): number =>
     const stats = statsMap[checkDate];
     if (!stats) break; // No record implies start of tracking or gap
     
-    // In challenge mode or normal mode, if you are over budget, streak breaks.
+    // Resume Logic: If it was a challenge day, we skip it (pause), 
+    // effectively connecting the streak across the challenge gap.
+    if (stats.isChallengeDay) {
+        checkDate = addDays(checkDate, -1);
+        continue;
+    }
+    
+    // Normal Streak Logic
     if (stats.status !== BudgetStatus.OverBudget) {
       streak++;
       checkDate = addDays(checkDate, -1);
