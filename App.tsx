@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Settings, Entry, TabView } from './types';
+import { Settings, Entry, TabView, ChallengeStatus } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
-import { calculateStats, calculateStreak } from './utils/financeHelpers';
+import { calculateStats, calculateStreak, calculateChallengeTotalBudget } from './utils/financeHelpers';
 import { getTodayISO } from './utils/dateUtils';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
@@ -74,6 +74,42 @@ const App: React.FC = () => {
   }, [settings, entries]);
 
   const streak = useMemo(() => calculateStreak(statsMap), [statsMap]);
+
+  // Auto-archive expired challenges
+  useEffect(() => {
+    const today = getTodayISO();
+    if (settings.activeChallenge && today > settings.activeChallenge.endDate) {
+       console.log("Archiving expired challenge...");
+       const active = settings.activeChallenge;
+       // Retrieve stats for the last day of the challenge to lock in the final result
+       // We rely on statsMap having this date. Since calculation goes to 'localEnd' (5 years out), it should be there.
+       const finalStats = statsMap[active.endDate];
+       
+       // Fallback if stats missing (shouldn't happen if logic is correct)
+       const finalSaved = finalStats?.challengeSavedSoFar || 0;
+       
+       const totalBudget = calculateChallengeTotalBudget(active, settings);
+       const targetPct = active.targetPercentage ?? 100;
+       const targetAmount = totalBudget * (targetPct / 100);
+       
+       // Determine status
+       const isSuccess = finalSaved >= targetAmount;
+       const status: ChallengeStatus = isSuccess ? 'completed' : 'failed';
+       
+       const archivedChallenge = {
+           ...active,
+           status,
+           finalSaved,
+           finalTotalBudget: totalBudget
+       };
+       
+       setSettings(prev => ({
+           ...prev,
+           activeChallenge: null,
+           pastChallenges: [archivedChallenge, ...(prev.pastChallenges || [])]
+       }));
+    }
+  }, [settings.activeChallenge, statsMap, settings]);
 
   const handleAddEntry = (amount: number, note: string, date: string) => {
     const newEntry: Entry = {
