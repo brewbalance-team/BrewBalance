@@ -1,8 +1,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { Entry, Settings } from '../types';
-import { TrendingUp, Info, Edit2, Trophy, Target, Ban, CheckCircle2, AlertCircle, PlayCircle, AlertOctagon } from 'lucide-react';
-import { calculateChallengeBudgetSoFar, calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
+import { TrendingUp, Info, Edit2, Trophy, Target, Ban, CheckCircle2, AlertCircle, PlayCircle, AlertOctagon, Percent, DollarSign, Wallet } from 'lucide-react';
+import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
 import { getTodayISO } from '../utils/dateUtils';
 import { calculateStats } from '../utils/financeHelpers';
 
@@ -37,10 +37,6 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
   const activeChallengeStatus = useMemo(() => {
       if (!settings.activeChallenge) return null;
       
-      // We need stats to get savedSoFar. 
-      // Note: Calculating full stats here might be expensive if many entries, but necessary for accuracy.
-      // Optimally, we'd pass statsMap from parent, but this component doesn't receive it currently.
-      // We'll do a localized lightweight check or just calc stats.
       const statsMap = calculateStats(settings, entries, todayISO);
       
       // Determine relevant date for stats
@@ -153,9 +149,13 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                         const isActive = challenge.status === 'active';
                         const isActiveFailed = isActive && activeChallengeStatus?.isFailed;
 
+                        // Check historical status
+                        // Note: We use the status stored in history for completed challenges
+                        const status = challenge.status;
+
                         if (isActive) {
                             if (isActiveFailed) {
-                                displayStatus = 'Failed but still in progress';
+                                displayStatus = 'Failed (Active)';
                                 statusColor = 'text-red-400';
                                 bgClass = 'bg-red-950/20 border-red-900/40 shadow-[0_0_15px_rgba(220,38,38,0.2)]';
                                 icon = <AlertOctagon size={18} />;
@@ -166,20 +166,21 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                                 icon = <PlayCircle size={18} />;
                             }
                         } else {
-                            const isCancelled = challenge.status === 'cancelled';
-                            const isSuccess = !isCancelled && (challenge.finalSaved !== undefined && challenge.finalSaved >= 0);
-                            const isFailed = !isCancelled && (challenge.finalSaved !== undefined && challenge.finalSaved < 0);
-
-                            if (isSuccess) {
+                            if (status === 'completed') {
                                 displayStatus = 'Successful';
                                 statusColor = 'text-emerald-400';
                                 bgClass = 'bg-emerald-950/20 border-emerald-900/40';
                                 icon = <CheckCircle2 size={18} />;
-                            } else if (isFailed) {
+                            } else if (status === 'failed') {
                                 displayStatus = 'Failed';
                                 statusColor = 'text-red-400';
                                 bgClass = 'bg-red-950/20 border-red-900/40';
                                 icon = <AlertCircle size={18} />;
+                            } else {
+                                displayStatus = 'Cancelled';
+                                statusColor = 'text-slate-400';
+                                bgClass = 'bg-slate-900 border-slate-800';
+                                icon = <Ban size={18} />;
                             }
                         }
 
@@ -187,9 +188,16 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                         const savedAmount = isActive 
                             ? (activeChallengeStatus?.savedSoFar || 0) 
                             : (challenge.finalSaved || 0);
+                        
+                        // Calculate Target Amount
+                        const targetPct = challenge.targetPercentage ?? 100;
+                        const totalBudget = isActive 
+                            ? calculateChallengeTotalBudget(challenge, settings)
+                            : (challenge.finalTotalBudget || 0);
+                        const targetAmount = totalBudget * (targetPct / 100);
 
                         return (
-                            <div key={challenge.id} className={`p-5 rounded-2xl border ${bgClass} shadow-sm relative overflow-hidden transition-all`}>
+                            <div key={challenge.id} className={`p-5 rounded-3xl border ${bgClass} shadow-sm relative overflow-hidden transition-all`}>
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
                                         <h3 className="text-lg font-black text-white">{challenge.name}</h3>
@@ -197,9 +205,9 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                                             {challenge.startDate} — {challenge.endDate}
                                         </p>
                                     </div>
-                                    <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-black/30 ${statusColor}`}>
+                                    <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-black/40 border border-white/5 ${statusColor}`}>
                                         {icon}
-                                        <span className={isActiveFailed ? "max-w-[120px] leading-tight text-right" : ""}>{displayStatus}</span>
+                                        <span>{displayStatus}</span>
                                     </div>
                                 </div>
                                 
@@ -210,16 +218,36 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                                     </div>
                                 )}
 
-                                <div className="pt-3 border-t border-white/5 flex justify-between items-center">
-                                    <span className="text-xs text-slate-500 font-bold uppercase">
-                                        {isActive ? "Current Savings" : "Total Saved"}
-                                    </span>
-                                    <span className={`text-2xl font-black ${
-                                        savedAmount >= 0 ? 'text-emerald-400' : 'text-red-400'
-                                    }`}>
-                                        {savedAmount >= 0 ? '+' : ''}{currency}{Math.round(savedAmount)}
-                                    </span>
+                                {/* Detailed Stats Grid */}
+                                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">
+                                    <div className="bg-slate-950/50 rounded-xl p-2 flex flex-col items-center justify-center border border-white/5">
+                                        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                            <Percent size={10} /> Criteria
+                                        </div>
+                                        <div className="text-sm font-black text-slate-300">
+                                            {targetPct}%
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-950/50 rounded-xl p-2 flex flex-col items-center justify-center border border-white/5">
+                                        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                            <Wallet size={10} /> Target
+                                        </div>
+                                        <div className="text-sm font-black text-slate-300">
+                                            {currency}{Math.round(targetAmount)}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-950/50 rounded-xl p-2 flex flex-col items-center justify-center border border-white/5">
+                                        <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                            <DollarSign size={10} /> Actual
+                                        </div>
+                                        <div className={`text-sm font-black ${savedAmount >= targetAmount ? 'text-emerald-400' : 'text-slate-200'}`}>
+                                            {currency}{Math.round(savedAmount)}
+                                        </div>
+                                    </div>
                                 </div>
+
                                 {isActive && !isActiveFailed && (
                                     <div className="mt-2 flex justify-center items-center">
                                         <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest animate-pulse">Active Now</span>

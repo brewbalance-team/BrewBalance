@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Target, Trophy, Percent } from 'lucide-react';
-import { Challenge } from '../types';
+import { Target, Trophy, Percent, Repeat } from 'lucide-react';
+import { Challenge, RecurrenceType } from '../types';
 
 interface ChallengeFormProps {
   initialData?: Partial<Challenge>;
@@ -16,6 +16,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
   const [startDate, setStartDate] = useState(initialData?.startDate || new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(initialData?.endDate || '');
   const [targetPercentage, setTargetPercentage] = useState(initialData?.targetPercentage ?? 100);
+  const [recurrence, setRecurrence] = useState<RecurrenceType>(initialData?.recurrence || 'none');
 
   useEffect(() => {
     if (initialData) {
@@ -24,6 +25,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       setStartDate(initialData.startDate || new Date().toISOString().split('T')[0]);
       setEndDate(initialData.endDate || '');
       setTargetPercentage(initialData.targetPercentage ?? 100);
+      setRecurrence(initialData.recurrence || 'none');
     }
   }, [initialData]);
 
@@ -53,7 +55,8 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       purpose: purpose.trim(),
       startDate,
       endDate,
-      targetPercentage
+      targetPercentage,
+      recurrence
     });
   };
 
@@ -128,6 +131,29 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
             ? "Hard Mode: You must save 100% of your budget. Spending anything means failure."
             : `You need to save at least ${targetPercentage}% of your total budget to pass.`}
         </p>
+      </div>
+
+      <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+         <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-2">
+            <Repeat size={10} /> Recurrence
+         </label>
+         <div className="grid grid-cols-3 gap-2">
+             {(['none', 'daily', 'weekly', 'bi-weekly', 'monthly'] as RecurrenceType[]).map((type) => (
+                 <button
+                    key={type}
+                    type="button"
+                    onClick={() => setRecurrence(type)}
+                    className={`px-2 py-2 rounded-lg text-xs font-bold capitalize transition-all ${recurrence === type ? 'bg-amber-500 text-slate-900' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:border-slate-600'}`}
+                 >
+                    {type === 'none' ? 'No Repeat' : type}
+                 </button>
+             ))}
+         </div>
+         {recurrence !== 'none' && (
+             <p className="text-[10px] text-amber-500/80 mt-2 leading-tight">
+                A new challenge will be automatically created when this one ends.
+             </p>
+         )}
       </div>
 
       <button 

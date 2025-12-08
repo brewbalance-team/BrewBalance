@@ -7,6 +7,8 @@ export enum BudgetStatus {
 
 export type ChallengeStatus = 'active' | 'completed' | 'cancelled' | 'failed';
 
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'bi-weekly' | 'monthly';
+
 export interface Challenge {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface Challenge {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   targetPercentage?: number; // 0-100, success criteria
+  recurrence?: RecurrenceType;
   status?: ChallengeStatus; // Status for history
   finalSaved?: number; // Snapshot of saved amount for history
   finalTotalBudget?: number; // Snapshot of total budget for history calculation

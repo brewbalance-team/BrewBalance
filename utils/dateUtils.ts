@@ -1,3 +1,4 @@
+
 export const formatDateISO = (date: Date): string => {
   // Use local time for date string generation to respect user timezone
   const offset = date.getTimezoneOffset();
@@ -29,5 +30,21 @@ export const addDays = (dateStr: string, days: number): string => {
   // Treat dateStr as UTC midnight to avoid timezone shifting issues
   const date = new Date(dateStr);
   date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().split('T')[0];
+};
+
+export const addMonths = (dateStr: string, months: number): string => {
+  const date = new Date(dateStr);
+  // Using UTC methods to avoid timezone shift issues on day boundaries
+  const currentDay = date.getUTCDate();
+  date.setUTCMonth(date.getUTCMonth() + months);
+  
+  // Handle end-of-month edge cases (e.g. Jan 31 + 1 month -> Feb 28/29)
+  // If the day changed, it means the month doesn't have that day (e.g. 31st), so it rolled over.
+  // Set to last day of previous month (which is the target month).
+  if (date.getUTCDate() !== currentDay) {
+      date.setUTCDate(0);
+  }
+  
   return date.toISOString().split('T')[0];
 };

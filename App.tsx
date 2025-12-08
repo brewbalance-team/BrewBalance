@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Settings, Entry, TabView, ChallengeStatus } from './types';
+import { Settings, Entry, TabView, ChallengeStatus, Challenge } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
 import { calculateStats, calculateStreak, calculateChallengeTotalBudget } from './utils/financeHelpers';
-import { getTodayISO } from './utils/dateUtils';
+import { getTodayISO, addDays, addMonths } from './utils/dateUtils';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import SettingsView from './components/Settings';
@@ -75,25 +75,27 @@ const App: React.FC = () => {
 
   const streak = useMemo(() => calculateStreak(statsMap), [statsMap]);
 
-  // Auto-archive expired challenges
+  // Auto-archive expired challenges and handle Recurrence
   useEffect(() => {
     const today = getTodayISO();
     if (settings.activeChallenge && today > settings.activeChallenge.endDate) {
        console.log("Archiving expired challenge...");
        const active = settings.activeChallenge;
        // Retrieve stats for the last day of the challenge to lock in the final result
-       // We rely on statsMap having this date. Since calculation goes to 'localEnd' (5 years out), it should be there.
        const finalStats = statsMap[active.endDate];
        
        // Fallback if stats missing (shouldn't happen if logic is correct)
-       const finalSaved = finalStats?.challengeSavedSoFar || 0;
+       const finalSaved = finalStats?.challengeSavedSoFar ?? 0;
        
        const totalBudget = calculateChallengeTotalBudget(active, settings);
        const targetPct = active.targetPercentage ?? 100;
        const targetAmount = totalBudget * (targetPct / 100);
        
-       // Determine status
-       const isSuccess = finalSaved >= targetAmount;
+       // Strict check: if target is 100, we need exactly >= 100% of budget.
+       // Floating point tolerance is small.
+       // If I spent anything, finalSaved < totalBudget, so it should fail if target is 100%.
+       const isSuccess = finalSaved >= (targetAmount - 0.001); 
+       
        const status: ChallengeStatus = isSuccess ? 'completed' : 'failed';
        
        const archivedChallenge = {
@@ -102,10 +104,55 @@ const App: React.FC = () => {
            finalSaved,
            finalTotalBudget: totalBudget
        };
+
+       // --- RECURRENCE LOGIC ---
+       let nextChallenge: Challenge | null = null;
+       if (active.recurrence && active.recurrence !== 'none') {
+           const startDateObj = new Date(active.startDate);
+           const endDateObj = new Date(active.endDate);
+           const durationDays = Math.round((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
+
+           let newStartDate = '';
+           let newEndDate = '';
+
+           if (active.recurrence === 'daily') {
+               newStartDate = addDays(active.startDate, 1);
+               newEndDate = addDays(active.endDate, 1);
+           } else if (active.recurrence === 'weekly') {
+               newStartDate = addDays(active.startDate, 7);
+               newEndDate = addDays(active.endDate, 7);
+           } else if (active.recurrence === 'bi-weekly') {
+               newStartDate = addDays(active.startDate, 14);
+               newEndDate = addDays(active.endDate, 14);
+           } else if (active.recurrence === 'monthly') {
+               newStartDate = addMonths(active.startDate, 1);
+               newEndDate = addMonths(active.endDate, 1);
+           }
+
+           // Check for overlap: If the calculated start date is BEFORE or ON the old end date (impossible for standard interval, but possible for multi-day daily),
+           // we enforce the new challenge to start immediately after the old one.
+           // However, standard recurrence usually implies "Same Day Next Week". 
+           // If I have a 7-day challenge repeating weekly, it starts Mon, Ends Sun. Next starts Mon. (End+1).
+           // If I have a 3-day challenge repeating daily (overlap), we only allow one active.
+           // Strategy: If newStartDate <= active.endDate, shift it to active.endDate + 1.
+           if (newStartDate <= active.endDate) {
+               newStartDate = addDays(active.endDate, 1);
+               newEndDate = addDays(newStartDate, durationDays);
+           }
+
+           nextChallenge = {
+               ...active,
+               id: crypto.randomUUID(),
+               startDate: newStartDate,
+               endDate: newEndDate,
+               status: 'active'
+           };
+           console.log("Created recurring challenge:", nextChallenge);
+       }
        
        setSettings(prev => ({
            ...prev,
-           activeChallenge: null,
+           activeChallenge: nextChallenge, // Set the next one if recurring, else null
            pastChallenges: [archivedChallenge, ...(prev.pastChallenges || [])]
        }));
     }
