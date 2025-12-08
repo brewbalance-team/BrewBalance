@@ -131,23 +131,31 @@ const App: React.FC = () => {
 
            // Check for overlap: If the calculated start date is BEFORE or ON the old end date (impossible for standard interval, but possible for multi-day daily),
            // we enforce the new challenge to start immediately after the old one.
-           // However, standard recurrence usually implies "Same Day Next Week". 
-           // If I have a 7-day challenge repeating weekly, it starts Mon, Ends Sun. Next starts Mon. (End+1).
-           // If I have a 3-day challenge repeating daily (overlap), we only allow one active.
            // Strategy: If newStartDate <= active.endDate, shift it to active.endDate + 1.
            if (newStartDate <= active.endDate) {
                newStartDate = addDays(active.endDate, 1);
                newEndDate = addDays(newStartDate, durationDays);
            }
 
-           nextChallenge = {
-               ...active,
-               id: crypto.randomUUID(),
-               startDate: newStartDate,
-               endDate: newEndDate,
-               status: 'active'
-           };
-           console.log("Created recurring challenge:", nextChallenge);
+           // CHECK RECURRENCE END DATE
+           // If a recurrenceEndDate is set, ensure the new challenge starts on or before it.
+           // If the new start date is AFTER the recurrenceEndDate, we stop.
+           let shouldCreate = true;
+           if (active.recurrenceEndDate && newStartDate > active.recurrenceEndDate) {
+               shouldCreate = false;
+               console.log("Recurrence end date reached. Stopping recurrence.");
+           }
+
+           if (shouldCreate) {
+                nextChallenge = {
+                    ...active,
+                    id: crypto.randomUUID(),
+                    startDate: newStartDate,
+                    endDate: newEndDate,
+                    status: 'active'
+                };
+                console.log("Created recurring challenge:", nextChallenge);
+           }
        }
        
        setSettings(prev => ({

@@ -17,6 +17,7 @@ export interface Challenge {
   endDate: string; // YYYY-MM-DD
   targetPercentage?: number; // 0-100, success criteria
   recurrence?: RecurrenceType;
+  recurrenceEndDate?: string; // YYYY-MM-DD, optional end date for recurrence
   status?: ChallengeStatus; // Status for history
   finalSaved?: number; // Snapshot of saved amount for history
   finalTotalBudget?: number; // Snapshot of total budget for history calculation

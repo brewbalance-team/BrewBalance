@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Target, Trophy, Percent, Repeat } from 'lucide-react';
+import { Target, Trophy, Percent, Repeat, CalendarOff } from 'lucide-react';
 import { Challenge, RecurrenceType } from '../types';
 
 interface ChallengeFormProps {
@@ -17,6 +17,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
   const [endDate, setEndDate] = useState(initialData?.endDate || '');
   const [targetPercentage, setTargetPercentage] = useState(initialData?.targetPercentage ?? 100);
   const [recurrence, setRecurrence] = useState<RecurrenceType>(initialData?.recurrence || 'none');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState(initialData?.recurrenceEndDate || '');
 
   useEffect(() => {
     if (initialData) {
@@ -26,6 +27,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       setEndDate(initialData.endDate || '');
       setTargetPercentage(initialData.targetPercentage ?? 100);
       setRecurrence(initialData.recurrence || 'none');
+      setRecurrenceEndDate(initialData.recurrenceEndDate || '');
     }
   }, [initialData]);
 
@@ -49,6 +51,10 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       alert("End date must be after start date.");
       return;
     }
+    if (recurrence !== 'none' && recurrenceEndDate && recurrenceEndDate <= endDate) {
+        alert("Recurrence end date must be after the challenge end date.");
+        return;
+    }
 
     onSubmit({
       name: name.trim(),
@@ -56,7 +62,8 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       startDate,
       endDate,
       targetPercentage,
-      recurrence
+      recurrence,
+      recurrenceEndDate: recurrence !== 'none' ? recurrenceEndDate : undefined
     });
   };
 
@@ -150,9 +157,21 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
              ))}
          </div>
          {recurrence !== 'none' && (
-             <p className="text-[10px] text-amber-500/80 mt-2 leading-tight">
-                A new challenge will be automatically created when this one ends.
-             </p>
+             <div className="mt-3 pt-3 border-t border-slate-800 animate-in fade-in slide-in-from-top-1">
+                 <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                     <CalendarOff size={10} /> Repeat Until (Optional)
+                 </label>
+                 <input 
+                    type="date" 
+                    value={recurrenceEndDate}
+                    onChange={e => setRecurrenceEndDate(e.target.value)}
+                    min={endDate}
+                    className="w-full p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300 text-xs font-bold outline-none focus:border-amber-500"
+                 />
+                 <p className="text-[10px] text-slate-500 mt-1 leading-tight">
+                    If set, the challenge will stop repeating after this date. Leave blank for indefinite repetition.
+                 </p>
+             </div>
          )}
       </div>
 
