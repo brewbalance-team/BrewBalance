@@ -18,3 +18,36 @@ View your app in AI Studio: https://ai.studio/apps/drive/10exO18Zu29uJIhshYh7i3e
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Testing
+
+The application includes a comprehensive test suite using Playwright for end-to-end testing.
+
+### Running Tests
+
+1. Install Playwright browsers:
+   ```bash
+   npx playwright install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Run the tests:
+   ```bash
+   npm test
+   ```
+
+### Test Coverage
+
+The test suite covers:
+- App loading and navigation
+- Adding expense entries
+- Settings configuration
+- Calendar/Balance view
+- History view
+- Challenge management
+
+See `tests/README.md` for detailed information about the test suite.
