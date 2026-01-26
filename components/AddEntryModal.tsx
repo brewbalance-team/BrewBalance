@@ -64,8 +64,9 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
           </div>
 
           <div>
-             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
+             <label htmlFor="date" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
              <input 
+                id="date"
                 type="date"
                 value={date.toISOString().split('T')[0]}
                 onChange={(e) => setDate(new Date(e.target.value))}
@@ -74,8 +75,9 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note (Optional)</label>
+            <label htmlFor="note" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note (Optional)</label>
             <input
+              id="note"
               type="text"
               enterKeyHint="done"
               placeholder="e.g., Lager at Pub"

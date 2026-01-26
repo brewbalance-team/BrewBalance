@@ -1,9 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { DailyStats, BudgetStatus, Settings } from '../types';
 import { getMonthDates, formatDateISO } from '../utils/dateUtils';
 import { testId } from '../utils/testUtils';
+
 import DayDetailModal from './DayDetailModal';
 
 interface CalendarViewProps {

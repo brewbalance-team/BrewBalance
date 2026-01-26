@@ -1,10 +1,10 @@
 
 import React, { useMemo, useState } from 'react';
-import { Entry, Settings } from '../types';
 import { TrendingUp, Info, Edit2, Trophy, Target, Ban, CheckCircle2, AlertCircle, PlayCircle, AlertOctagon, Percent, DollarSign, Wallet } from 'lucide-react';
-import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
+
+import { Entry, Settings } from '../types';
+import { calculateChallengeTotalBudget, isChallengeFailed , calculateStats } from '../utils/financeHelpers';
 import { getTodayISO } from '../utils/dateUtils';
-import { calculateStats } from '../utils/financeHelpers';
 import { testId } from '../utils/testUtils';
 
 interface HistoryViewProps {

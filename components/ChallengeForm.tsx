@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Target, Trophy, Percent, Repeat, CalendarOff, AlertCircle } from 'lucide-react';
+
 import { Challenge, RecurrenceType } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 
@@ -20,18 +21,6 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
   const [recurrence, setRecurrence] = useState<RecurrenceType>(initialData?.recurrence || 'none');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState(initialData?.recurrenceEndDate || '');
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialData) {
-      setName(initialData.name || '');
-      setPurpose(initialData.purpose || '');
-      setStartDate(initialData.startDate || getTodayISO());
-      setEndDate(initialData.endDate || '');
-      setTargetPercentage(initialData.targetPercentage ?? 100);
-      setRecurrence(initialData.recurrence || 'none');
-      setRecurrenceEndDate(initialData.recurrenceEndDate || '');
-    }
-  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +72,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       endDate,
       targetPercentage,
       recurrence,
-      ...(recurrence !== 'none' ? { recurrenceEndDate: recurrenceEndDate! } : {})
+      ...(recurrence !== 'none' ? { recurrenceEndDate: recurrenceEndDate } : {})
     });
   };
 
@@ -97,8 +86,9 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       )}
 
       <div>
-        <label className="text-[10px] font-bold text-slate-500 uppercase">Challenge Name <span className="text-red-500">*</span></label>
+        <label htmlFor="name" className="text-[10px] font-bold text-slate-500 uppercase">Challenge Name <span className="text-red-500">*</span></label>
         <input 
+          id="name"
           type="text" 
           placeholder="e.g. Dry November"
           value={name}
@@ -108,10 +98,11 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
         />
       </div>
       <div>
-        <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+        <label htmlFor="purpose" className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
           Goal <Target size={10} />
         </label>
         <input 
+          id="purpose"
           type="text" 
           placeholder="e.g. Kid's education fund"
           value={purpose}
@@ -121,8 +112,9 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-bold text-slate-500 uppercase">Start <span className="text-red-500">*</span></label>
+          <label htmlFor="startDate" className="text-[10px] font-bold text-slate-500 uppercase">Start <span className="text-red-500">*</span></label>
           <input 
+            id="startDate"
             type="date" 
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
@@ -131,8 +123,9 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
           />
         </div>
         <div>
-          <label className="text-[10px] font-bold text-slate-500 uppercase">End <span className="text-red-500">*</span></label>
+          <label htmlFor="endDate" className="text-[10px] font-bold text-slate-500 uppercase">End <span className="text-red-500">*</span></label>
           <input 
+            id="endDate"
             type="date" 
             value={endDate}
             onChange={e => setEndDate(e.target.value)}
@@ -144,14 +137,16 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
 
       <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
         <div className="flex justify-between items-center mb-1">
-          <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
             <Percent size={10} /> Success Target
-          </label>
+          </span>
           <span className={`text-xs font-black px-2 py-0.5 rounded-md ${targetPercentage === 100 ? 'bg-amber-950 text-amber-500' : 'bg-slate-800 text-slate-300'}`}>
             {targetPercentage}%
           </span>
         </div>
         <input 
+          id="targetPercentage"
+          aria-label="Success Target"
           type="range" 
           min="1" 
           max="100" 
@@ -167,10 +162,10 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
         </p>
       </div>
 
-      <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-         <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-2">
+      <fieldset className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+         <legend className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-2">
             <Repeat size={10} /> Recurrence
-         </label>
+         </legend>
          <div className="grid grid-cols-3 gap-2">
              {(['none', 'daily', 'weekly', 'bi-weekly', 'monthly'] as RecurrenceType[]).map((type) => (
                  <button
@@ -185,10 +180,11 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
          </div>
          {recurrence !== 'none' && (
              <div className="mt-3 pt-3 border-t border-slate-800 animate-in fade-in slide-in-from-top-1">
-                 <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                 <label htmlFor="recurrenceEndDate" className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
                      <CalendarOff size={10} /> Repeat Until (Optional)
                  </label>
                  <input 
+                    id="recurrenceEndDate"
                     type="date" 
                     value={recurrenceEndDate}
                     onChange={e => setRecurrenceEndDate(e.target.value)}
@@ -200,7 +196,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
                  </p>
              </div>
          )}
-      </div>
+      </fieldset>
 
       <button 
         type="submit"
