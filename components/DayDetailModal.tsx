@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Save, RotateCcw, TrendingDown, TrendingUp } from 'lucide-react';
+
 import { DailyStats } from '../types';
 
 interface DayDetailModalProps {
@@ -24,15 +25,8 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onSaveRollover,
   onResetRollover
 }) => {
-  const [budget, setBudget] = useState('');
-  const [rollover, setRollover] = useState('');
-
-  useEffect(() => {
-    if (stats) {
-      setBudget(stats.baseBudget.toString());
-      setRollover(stats.rollover.toString());
-    }
-  }, [stats]);
+  const [budget, setBudget] = useState(stats?.baseBudget.toString() || '');
+  const [rollover, setRollover] = useState(stats?.rollover.toString() || '');
 
   if (!isOpen || !stats) return null;
 

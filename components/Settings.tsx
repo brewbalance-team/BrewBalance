@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsType, DailyStats } from '../types';
 import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2 } from 'lucide-react';
+
+import { Settings as SettingsType, DailyStats } from '../types';
 import { APP_VERSION } from '../constants';
 import { testId } from '../utils/testUtils';
 
@@ -22,7 +23,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
     setLocalSettings(settings);
   }, [settings]);
 
-  const handleChange = (field: keyof SettingsType, value: any) => {
+  const handleChange = (field: keyof SettingsType, value: SettingsType[keyof SettingsType]) => {
     setLocalSettings(prev => ({ ...prev, [field]: value }));
   };
 
@@ -66,8 +67,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const MAX_SIZE = 512;
-        let width = img.width;
-        let height = img.height;
+        const width = img.width;
+        const height = img.height;
         const size = Math.min(width, height);
         const startX = (width - size) / 2;
         const startY = (height - size) / 2;
@@ -175,8 +176,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300">Your Name</label>
+              <label htmlFor="userName" className="text-sm font-semibold text-slate-300">Your Name</label>
               <input
+                id="userName"
                 type="text"
                 enterKeyHint="done"
                 value={localSettings.userName || ''}
@@ -186,7 +188,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300">Custom App Icon</label>
+              <label htmlFor="logo" className="text-sm font-semibold text-slate-300">Custom App Icon</label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-950 shrink-0">
                   {localSettings.logo ? (
@@ -198,7 +200,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   )}
                 </div>
                 <div className="flex-1">
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+                  <input id="logo" type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -230,9 +232,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300">Weekday Budget</label>
+              <label htmlFor="weekdayBudget" className="text-sm font-semibold text-slate-300">Weekday Budget</label>
               <div className="relative group">
                 <input
+                  id="weekdayBudget"
                   type="text"
                   inputMode="decimal"
                   enterKeyHint="done"
@@ -248,9 +251,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300">Weekend Budget</label>
+              <label htmlFor="weekendBudget" className="text-sm font-semibold text-slate-300">Weekend Budget</label>
               <div className="relative group">
                 <input
+                  id="weekendBudget"
                   type="text"
                   inputMode="decimal"
                   enterKeyHint="done"
@@ -274,8 +278,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300">Currency Symbol</label>
+              <label htmlFor="currency" className="text-sm font-semibold text-slate-300">Currency Symbol</label>
               <input
+                id="currency"
                 type="text"
                 enterKeyHint="done"
                 value={localSettings.currency}
@@ -287,13 +292,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
 
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold text-slate-300">Alarm Threshold</label>
+                <label htmlFor="alarmThreshold" className="text-sm font-semibold text-slate-300">Alarm Threshold</label>
                 <span className="text-xs font-bold bg-amber-900/30 text-amber-400 px-2 py-1 rounded-lg">
                   {Math.round(localSettings.alarmThreshold * 100)}%
                 </span>
               </div>
               <div className="h-10 flex items-center">
                 <input
+                  id="alarmThreshold"
                   type="range"
                   min="0.1"
                   max="1.0"
@@ -310,8 +316,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-300">Start Date</label>
+                <label htmlFor="startDate" className="text-sm font-semibold text-slate-300">Start Date</label>
                 <input
+                  id="startDate"
                   type="date"
                   value={localSettings.startDate}
                   onChange={e => handleChange('startDate', e.target.value)}
@@ -319,8 +326,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-300">End Date <span className="font-normal text-slate-600">(Optional)</span></label>
+                <label htmlFor="endDate" className="text-sm font-semibold text-slate-300">End Date <span className="font-normal text-slate-600">(Optional)</span></label>
                 <input
+                  id="endDate"
                   type="date"
                   value={localSettings.endDate || ''}
                   onChange={e => handleChange('endDate', e.target.value || null)}
@@ -350,7 +358,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           <div className="space-y-4">
             <button
               type="button"
-              onClick={handleShareFile}
+              onClick={() => { handleShareFile().catch(console.error); }}
               className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 shadow-md"
             >
               <Share2 size={18} className="text-emerald-500" />

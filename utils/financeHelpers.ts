@@ -1,5 +1,6 @@
 
 import { Settings, Entry, DailyStats, BudgetStatus, Challenge } from '../types';
+
 import { isWeekend, addDays, formatDateISO } from './dateUtils';
 
 export const calculateStats = (
@@ -73,7 +74,7 @@ export const calculateStats = (
         if (challenge?.id !== currentChallengeId) {
             // New challenge block
             challengeAccumulatedSavings = 0;
-            currentChallengeId = challenge!.id;
+            currentChallengeId = challenge.id;
         }
     } else {
         currentChallengeId = null;

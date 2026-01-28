@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+
 import { Settings, Entry, TabView, ChallengeStatus, Challenge } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
 import { calculateStats, calculateStreak, calculateChallengeTotalBudget } from './utils/financeHelpers';
@@ -20,23 +21,24 @@ const App: React.FC = () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as Partial<Settings>;
         // Ensure defaults are merged
         const merged = { ...DEFAULT_SETTINGS, ...parsed };
-        return merged;
+        return merged as Settings;
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
     }
     // If no settings found, use local today as start date
-    return { ...DEFAULT_SETTINGS, startDate: getTodayISO() };
+    const defaultSettings: Settings = { ...DEFAULT_SETTINGS, startDate: getTodayISO() };
+    return defaultSettings;
   });
 
   // Load entries from local storage
   const [entries, setEntries] = useState<Entry[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.ENTRIES);
-      return stored ? JSON.parse(stored) : [];
+      return stored ? (JSON.parse(stored) as Entry[]) : [];
     } catch (e) {
       console.error("Failed to load entries:", e);
       return [];
@@ -159,6 +161,7 @@ const App: React.FC = () => {
         }
       }
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSettings(prev => ({
         ...prev,
         activeChallenge: nextChallenge, // Set the next one if recurring, else null

@@ -2,9 +2,11 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Flame, ArrowRight, Trophy, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle, PiggyBank } from 'lucide-react';
+
 import { DailyStats, BudgetStatus, Settings, Challenge, ChallengeStatus } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
+
 import ChallengeForm from './ChallengeForm';
 
 interface DashboardProps {
@@ -23,12 +25,67 @@ type ExtendedChallengeStatus =
   | 'FINISHED_SUCCESS'
   | 'FINISHED_FAILED';
 
+const SavingsProgressBar = ({ label, saved, total, currency }: { label: string, saved: number, total: number, currency: string }) => {
+  const rawPct = total > 0 ? (saved / total) * 100 : 0;
+  // Clamp between 0 and 100 for car position
+  const percentage = Math.max(0, Math.min(100, rawPct));
+  const isNegative = saved < 0;
+  
+  return (
+      <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-lg relative">
+          <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">{label}</span>
+              <span className={`text-xs font-black px-2 py-0.5 rounded flex items-center gap-1 ${isNegative ? 'bg-red-950/50 text-red-400' : 'bg-emerald-950/50 text-emerald-400'}`}>
+                  {isNegative ? 'ENGINE FAILURE' : <span>{Math.round(percentage)}% ACHIEVED</span>}
+              </span>
+          </div>
+          
+          <div className="flex justify-between items-end mb-2 px-1">
+               <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Saved</span>
+                  <span className={`text-2xl font-black leading-none ${isNegative ? 'text-red-400' : 'text-emerald-400'}`}>{currency}{Math.round(saved)}</span>
+               </div>
+               <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Goal</span>
+                  <span className="text-lg font-bold text-slate-400 leading-none">{currency}{Math.round(total)}</span>
+               </div>
+          </div>
+          
+          {/* F1 Track Bar */}
+          <div className="relative h-12 w-full bg-slate-800 rounded-lg mt-3 border-y-2 border-slate-700 flex items-center shadow-inner">
+              {/* Track Markings (Dashed Line) */}
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] w-full border-t border-dashed border-slate-600/50"></div>
+              
+              {/* Start Line */}
+              <div className="absolute left-0 h-full w-2 bg-white/10 border-r border-white/20"></div>
+
+              {/* Finish Flag - Bigger */}
+              <div className="absolute right-2 text-3xl z-0 opacity-80">🏁</div>
+
+              {/* Progress Bar (Colored tail) */}
+              <div 
+                  className={`absolute h-2 top-1/2 -translate-y-1/2 left-0 rounded-r-full transition-all duration-700 shadow-[0_0_8px_currentColor] ${isNegative ? 'bg-red-500 text-red-500' : 'bg-emerald-500 text-emerald-500'}`} 
+                  style={{ width: `${percentage}%` }}
+              ></div>
+
+              {/* The Car - Bigger */}
+              <div 
+                  className="absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-out flex items-center justify-center"
+                  style={{ left: `calc(${percentage}% - 22px)` }}
+              >
+                   <span className="text-4xl transform -scale-x-100 drop-shadow-xl filter pb-1">🏎️</span>
+              </div>
+          </div>
+      </div>
+  );
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpdateSettings }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   
   const todayISO = getTodayISO();
-  const todayStats = statsMap[todayISO] || {
+  const todayStats = useMemo(() => statsMap[todayISO] || {
     date: todayISO,
     baseBudget: 0,
     rollover: 0,
@@ -37,7 +94,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
     remaining: 0,
     status: BudgetStatus.UnderAlarm,
     entries: []
-  };
+  }, [statsMap, todayISO]);
 
   const isBudgetSet = settings.weekdayBudget > 0 || settings.weekendBudget > 0;
 
@@ -178,7 +235,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
         totalDays,
         status
     };
-  }, [settings.activeChallenge, statsMap, todayISO, settings]);
+  }, [statsMap, todayISO, settings, todayStats]);
 
   // --- Handlers ---
 
@@ -303,61 +360,6 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
       }
   };
 
-  const SavingsProgressBar = ({ label, saved, total }: { label: string, saved: number, total: number }) => {
-    const rawPct = total > 0 ? (saved / total) * 100 : 0;
-    // Clamp between 0 and 100 for car position
-    const percentage = Math.max(0, Math.min(100, rawPct));
-    const isNegative = saved < 0;
-    
-    return (
-        <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-lg relative">
-            <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">{label}</span>
-                <span className={`text-xs font-black px-2 py-0.5 rounded flex items-center gap-1 ${isNegative ? 'bg-red-950/50 text-red-400' : 'bg-emerald-950/50 text-emerald-400'}`}>
-                    {isNegative ? 'ENGINE FAILURE' : <span>{Math.round(percentage)}% ACHIEVED</span>}
-                </span>
-            </div>
-            
-            <div className="flex justify-between items-end mb-2 px-1">
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Saved</span>
-                    <span className={`text-2xl font-black leading-none ${isNegative ? 'text-red-400' : 'text-emerald-400'}`}>{currency}{Math.round(saved)}</span>
-                 </div>
-                 <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Goal</span>
-                    <span className="text-lg font-bold text-slate-400 leading-none">{currency}{Math.round(total)}</span>
-                 </div>
-            </div>
-            
-            {/* F1 Track Bar */}
-            <div className="relative h-12 w-full bg-slate-800 rounded-lg mt-3 border-y-2 border-slate-700 flex items-center shadow-inner">
-                {/* Track Markings (Dashed Line) */}
-                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] w-full border-t border-dashed border-slate-600/50"></div>
-                
-                {/* Start Line */}
-                <div className="absolute left-0 h-full w-2 bg-white/10 border-r border-white/20"></div>
-
-                {/* Finish Flag - Bigger */}
-                <div className="absolute right-2 text-3xl z-0 opacity-80">🏁</div>
-
-                {/* Progress Bar (Colored tail) */}
-                <div 
-                    className={`absolute h-2 top-1/2 -translate-y-1/2 left-0 rounded-r-full transition-all duration-700 shadow-[0_0_8px_currentColor] ${isNegative ? 'bg-red-500 text-red-500' : 'bg-emerald-500 text-emerald-500'}`} 
-                    style={{ width: `${percentage}%` }}
-                ></div>
-
-                {/* The Car - Bigger */}
-                <div 
-                    className="absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-out flex items-center justify-center"
-                    style={{ left: `calc(${percentage}% - 22px)` }}
-                >
-                     <span className="text-4xl transform -scale-x-100 drop-shadow-xl filter pb-1">🏎️</span>
-                </div>
-            </div>
-        </div>
-    );
-  };
-
   const isUpcoming = challengeStats?.status === 'UPCOMING';
 
   const renderChallengeCard = () => {
@@ -466,8 +468,8 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
         {isChallengeDay && challengeStats ? (
             // --- ACTIVE CHALLENGE DAY VIEW ---
             <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <SavingsProgressBar label="Daily Savings Progress" saved={todayStats.remaining} total={todayStats.baseBudget} />
-                <SavingsProgressBar label="Total Challenge Progress" saved={challengeStats.totalSavedSoFar} total={challengeStats.totalBudget} />
+                <SavingsProgressBar label="Daily Savings Progress" saved={todayStats.remaining} total={todayStats.baseBudget} currency={settings.currency} />
+                <SavingsProgressBar label="Total Challenge Progress" saved={challengeStats.totalSavedSoFar} total={challengeStats.totalBudget} currency={settings.currency} />
             </div>
         ) : (
             // --- NORMAL VIEW (Also used for Upcoming days) ---

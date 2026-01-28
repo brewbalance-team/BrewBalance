@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Check, Trash2, Beer, AlertCircle } from 'lucide-react';
+
 import { Entry } from '../types';
 
 interface EditEntryModalProps {
@@ -12,19 +13,10 @@ interface EditEntryModalProps {
 }
 
 const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, isOpen, onClose, onSave, onDelete, currency }) => {
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState('');
+  const [amount, setAmount] = useState(entry?.amount.toString() || '');
+  const [note, setNote] = useState(entry?.note || '');
+  const [date, setDate] = useState(entry?.date || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  useEffect(() => {
-    if (entry) {
-      setAmount(entry.amount.toString());
-      setNote(entry.note);
-      setDate(entry.date);
-      setShowDeleteConfirm(false); // Reset delete confirm state when entry opens
-    }
-  }, [entry]);
 
   if (!isOpen || !entry) return null;
 
@@ -85,8 +77,9 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, isOpen, onClose,
 
           <div className="grid grid-cols-1 gap-4">
             <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
+                <label htmlFor="date" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
                 <input 
+                    id="date"
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -95,8 +88,9 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, isOpen, onClose,
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note</label>
+                <label htmlFor="note" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note</label>
                 <input
+                id="note"
                 type="text"
                 enterKeyHint="done"
                 placeholder="e.g., Lager at Pub"
