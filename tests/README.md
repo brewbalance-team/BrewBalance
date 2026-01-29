@@ -13,17 +13,21 @@ The test suite requires Playwright to be installed. It has been configured with 
 ## Running Tests
 
 ### Prerequisites
+
 1. Install dependencies: `npm install`
 2. Install Playwright browsers: `npx playwright install`
 
 ### Commands
+
 - Run all tests: `npm test`
 - Run tests with UI: `npm run test:ui`
 - Run specific test: `npx playwright test --grep "test name"`
 - Run on specific browser: `npx playwright test --project=chromium`
 
 ### Development Server
+
 The tests expect the development server to be running on port 3000. Start it with:
+
 ```bash
 npm run dev
 ```

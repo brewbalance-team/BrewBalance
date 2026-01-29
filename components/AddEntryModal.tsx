@@ -39,18 +39,23 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-xl font-black text-white flex items-center gap-3">
             <div className="bg-amber-950/40 p-2.5 rounded-xl text-amber-500 border border-amber-900/50">
-                <Beer size={24} />
+              <Beer size={24} />
             </div>
             Add Expense
           </h3>
-          <button onClick={onClose} className="bg-slate-800 p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors border border-slate-700">
+          <button
+            onClick={onClose}
+            className="bg-slate-800 p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors border border-slate-700"
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Amount ({currency})</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Amount ({currency})
+            </label>
             <input
               type="text"
               inputMode="decimal"
@@ -64,18 +69,28 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
           </div>
 
           <div>
-             <label htmlFor="date" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
-             <input 
-                id="date"
-                type="date"
-                value={date.toISOString().split('T')[0]}
-                onChange={(e) => setDate(new Date(e.target.value))}
-                className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
-             />
+            <label
+              htmlFor="date"
+              className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
+            >
+              Date
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={date.toISOString().split('T')[0]}
+              onChange={(e) => setDate(new Date(e.target.value))}
+              className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
+            />
           </div>
 
           <div>
-            <label htmlFor="note" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Note (Optional)</label>
+            <label
+              htmlFor="note"
+              className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
+            >
+              Note (Optional)
+            </label>
             <input
               id="note"
               type="text"

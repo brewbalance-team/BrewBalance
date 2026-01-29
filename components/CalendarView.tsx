@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -16,7 +15,9 @@ interface CalendarViewProps {
 
 const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdateSettings }) => {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1),
+  );
   const [selectedDayStats, setSelectedDayStats] = useState<DailyStats | null>(null);
 
   const handlePrevMonth = () => {
@@ -38,17 +39,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
     // Muted colors for future dates
     if (isFuture) {
       switch (status) {
-        case BudgetStatus.UnderAlarm: return 'bg-emerald-900/10 border-emerald-900/30 text-emerald-600/70';
-        case BudgetStatus.Warning: return 'bg-amber-900/10 border-amber-900/30 text-amber-600/70';
-        case BudgetStatus.OverBudget: return 'bg-red-900/10 border-red-900/30 text-red-600/70';
-        default: return 'bg-slate-900 border-slate-800 text-slate-600';
+        case BudgetStatus.UnderAlarm:
+          return 'bg-emerald-900/10 border-emerald-900/30 text-emerald-600/70';
+        case BudgetStatus.Warning:
+          return 'bg-amber-900/10 border-amber-900/30 text-amber-600/70';
+        case BudgetStatus.OverBudget:
+          return 'bg-red-900/10 border-red-900/30 text-red-600/70';
+        default:
+          return 'bg-slate-900 border-slate-800 text-slate-600';
       }
     }
     switch (status) {
-      case BudgetStatus.UnderAlarm: return 'bg-emerald-900/20 border-emerald-900/50 text-emerald-400';
-      case BudgetStatus.Warning: return 'bg-amber-900/20 border-amber-900/50 text-amber-400';
-      case BudgetStatus.OverBudget: return 'bg-red-900/20 border-red-900/50 text-red-400';
-      default: return 'bg-slate-900 border-slate-800 text-slate-600';
+      case BudgetStatus.UnderAlarm:
+        return 'bg-emerald-900/20 border-emerald-900/50 text-emerald-400';
+      case BudgetStatus.Warning:
+        return 'bg-amber-900/20 border-amber-900/50 text-amber-400';
+      case BudgetStatus.OverBudget:
+        return 'bg-red-900/20 border-red-900/50 text-red-400';
+      default:
+        return 'bg-slate-900 border-slate-800 text-slate-600';
     }
   };
 
@@ -87,14 +96,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
 
   return (
     <div className="h-full flex flex-col pb-20">
-      <div className="flex items-center justify-between mb-6 bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-800" {...testId('calendar-header')}>
-        <button onClick={handlePrevMonth} className="p-3 hover:bg-slate-800 rounded-full text-slate-400 transition-colors" {...testId('calendar-prev-month')}>
+      <div
+        className="flex items-center justify-between mb-6 bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-800"
+        {...testId('calendar-header')}
+      >
+        <button
+          onClick={handlePrevMonth}
+          className="p-3 hover:bg-slate-800 rounded-full text-slate-400 transition-colors"
+          {...testId('calendar-prev-month')}
+        >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="font-black text-lg text-slate-200 tracking-tight" {...testId('calendar-month-year')}>
+        <h2
+          className="font-black text-lg text-slate-200 tracking-tight"
+          {...testId('calendar-month-year')}
+        >
           {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
         </h2>
-        <button onClick={handleNextMonth} className="p-3 hover:bg-slate-800 rounded-full text-slate-400 transition-colors" {...testId('calendar-next-month')}>
+        <button
+          onClick={handleNextMonth}
+          className="p-3 hover:bg-slate-800 rounded-full text-slate-400 transition-colors"
+          {...testId('calendar-next-month')}
+        >
           <ChevronRight size={20} />
         </button>
       </div>
@@ -102,7 +125,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
       <div className="bg-slate-900 p-5 rounded-[2rem] shadow-sm border border-slate-800 flex-1 overflow-y-auto custom-scrollbar">
         <div className="grid grid-cols-7 mb-4 text-center">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-            <div key={i} className={`text-xs font-bold ${i === 0 || i === 6 ? 'text-amber-500' : 'text-slate-500'}`}>
+            <div
+              key={i}
+              className={`text-xs font-bold ${i === 0 || i === 6 ? 'text-amber-500' : 'text-slate-500'}`}
+            >
               {day}
             </div>
           ))}
@@ -113,15 +139,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
 
-          {dates.map(dateStr => {
+          {dates.map((dateStr) => {
             const dayNum = parseInt(dateStr.split('-')[2] || '0', 10);
             const stats = statsMap[dateStr];
             const hasStats = !!stats;
             const isFuture = dateStr > todayISO;
             const isToday = dateStr === todayISO;
 
-            const statusClass = hasStats ? getStatusColor(stats.status, isFuture) : 'bg-slate-950 border-slate-800 text-slate-700';
-            const currencySymbol = settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
+            const statusClass = hasStats
+              ? getStatusColor(stats.status, isFuture)
+              : 'bg-slate-950 border-slate-800 text-slate-700';
+            const currencySymbol =
+              settings.currency === 'JPY'
+                ? '¥'
+                : settings.currency === '$'
+                  ? '$'
+                  : settings.currency;
             const isCustom = stats?.isCustomBudget;
             const isCustomRollover = stats?.isCustomRollover;
 
@@ -133,12 +166,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
                 className={`aspect-square rounded-2xl border flex flex-col items-center justify-center p-0.5 relative transition-all active:scale-95 ${statusClass} ${isToday ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900 z-10' : ''}`}
               >
                 <div className="flex items-start gap-0.5">
-                  <span className={`text-xs font-bold ${hasStats ? (isFuture ? 'opacity-70' : '') : 'opacity-50'}`}>{dayNum}</span>
-                  {(isCustom || isCustomRollover) && <div className="w-1 h-1 rounded-full bg-amber-500 mt-1"></div>}
+                  <span
+                    className={`text-xs font-bold ${hasStats ? (isFuture ? 'opacity-70' : '') : 'opacity-50'}`}
+                  >
+                    {dayNum}
+                  </span>
+                  {(isCustom || isCustomRollover) && (
+                    <div className="w-1 h-1 rounded-full bg-amber-500 mt-1"></div>
+                  )}
                 </div>
                 {hasStats && (
-                  <span className={`text-[9px] mt-0.5 font-bold truncate w-full text-center ${isFuture ? 'opacity-60 italic' : 'opacity-90'}`}>
-                    {currencySymbol}{Math.round(stats.remaining)}
+                  <span
+                    className={`text-[9px] mt-0.5 font-bold truncate w-full text-center ${isFuture ? 'opacity-60 italic' : 'opacity-90'}`}
+                  >
+                    {currencySymbol}
+                    {Math.round(stats.remaining)}
                   </span>
                 )}
               </button>
@@ -163,7 +205,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
         isOpen={!!selectedDayStats}
         onClose={() => setSelectedDayStats(null)}
         stats={selectedDayStats}
-        currency={settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency}
+        currency={
+          settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency
+        }
         onSaveBudget={handleSaveBudget}
         onResetBudget={handleResetBudget}
         onSaveRollover={handleSaveRollover}

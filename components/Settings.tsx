@@ -1,6 +1,15 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2 } from 'lucide-react';
+import {
+  Save,
+  Trash2,
+  AlertTriangle,
+  RefreshCw,
+  User,
+  Image as ImageIcon,
+  Upload,
+  FileText,
+  Share2,
+} from 'lucide-react';
 
 import { Settings as SettingsType, DailyStats } from '../types';
 import { APP_VERSION } from '../constants';
@@ -24,7 +33,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
   }, [settings]);
 
   const handleChange = (field: keyof SettingsType, value: SettingsType[keyof SettingsType]) => {
-    setLocalSettings(prev => ({ ...prev, [field]: value }));
+    setLocalSettings((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleBudgetChange = (field: keyof SettingsType, value: string) => {
@@ -88,41 +97,44 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
   // --- Export Logic ---
   const generateCSV = (): string => {
     const headers = [
-      "Date",
-      "Daily Base Budget",
-      "Rollover from Previous Day",
-      "Daily Actual Spent",
-      "Note",
-      "Daily Current Balance",
-      "Challenge Saved"
+      'Date',
+      'Daily Base Budget',
+      'Rollover from Previous Day',
+      'Daily Actual Spent',
+      'Note',
+      'Daily Current Balance',
+      'Challenge Saved',
     ];
 
     const allDates = Object.keys(statsMap).sort((a, b) => b.localeCompare(a));
     const today = new Date().toISOString().split('T')[0];
 
-    const exportRows = allDates.filter(date => {
-      const isPastOrToday = date <= today!;
-      const hasEntries = statsMap[date] && statsMap[date].entries.length > 0;
-      return isPastOrToday || hasEntries;
-    }).map(date => {
-      const stats = statsMap[date];
-      if (!stats) return null;
-      const notes = stats.entries
-        .map(e => e.note)
-        .filter(n => n && n.trim() !== '')
-        .join('; ');
-      const escapedNote = `"${notes.replace(/"/g, '""')}"`;
+    const exportRows = allDates
+      .filter((date) => {
+        const isPastOrToday = date <= today!;
+        const hasEntries = statsMap[date] && statsMap[date].entries.length > 0;
+        return isPastOrToday || hasEntries;
+      })
+      .map((date) => {
+        const stats = statsMap[date];
+        if (!stats) return null;
+        const notes = stats.entries
+          .map((e) => e.note)
+          .filter((n) => n && n.trim() !== '')
+          .join('; ');
+        const escapedNote = `"${notes.replace(/"/g, '""')}"`;
 
-      return [
-        stats.date,
-        stats.baseBudget,
-        stats.rollover.toFixed(2),
-        stats.spent.toFixed(2),
-        escapedNote,
-        stats.remaining.toFixed(2),
-        stats.isChallengeDay ? stats.challengeSavedSoFar?.toFixed(2) : ''
-      ].join(',');
-    }).filter((row): row is string => row !== null);
+        return [
+          stats.date,
+          stats.baseBudget,
+          stats.rollover.toFixed(2),
+          stats.spent.toFixed(2),
+          escapedNote,
+          stats.remaining.toFixed(2),
+          stats.isChallengeDay ? stats.challengeSavedSoFar?.toFixed(2) : '',
+        ].join(',');
+      })
+      .filter((row): row is string => row !== null);
 
     return [headers.join(','), ...exportRows].join('\n');
   };
@@ -130,11 +142,17 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
   const handleShareFile = async () => {
     const csvContent = generateCSV();
     const now = new Date();
-    const timestamp = now.getFullYear() + '-' +
-      String(now.getMonth() + 1).padStart(2, '0') + '-' +
-      String(now.getDate()).padStart(2, '0') + '_' +
-      String(now.getHours()).padStart(2, '0') + '-' +
-      String(now.getMinutes()).padStart(2, '0') + '-' +
+    const timestamp =
+      now.getFullYear() +
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(now.getDate()).padStart(2, '0') +
+      '_' +
+      String(now.getHours()).padStart(2, '0') +
+      '-' +
+      String(now.getMinutes()).padStart(2, '0') +
+      '-' +
       String(now.getSeconds()).padStart(2, '0');
 
     const filename = `brewbalance_history_${timestamp}.csv`;
@@ -146,7 +164,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
         await navigator.share({
           files: [file],
           title: 'BrewBalance History',
-          text: 'Here is my BrewBalance budget history.'
+          text: 'Here is my BrewBalance budget history.',
         });
       } catch (error) {
         console.log('Share cancelled or failed', error);
@@ -167,8 +185,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
     <div className="pb-24 h-full flex flex-col">
       <h2 className="text-3xl font-extrabold text-white mb-6 tracking-tight">Settings</h2>
 
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar">
-
+      <form
+        onSubmit={handleSubmit}
+        className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar"
+      >
         {/* Profile Section */}
         <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -176,23 +196,31 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="userName" className="text-sm font-semibold text-slate-300">Your Name</label>
+              <label htmlFor="userName" className="text-sm font-semibold text-slate-300">
+                Your Name
+              </label>
               <input
                 id="userName"
                 type="text"
                 enterKeyHint="done"
                 value={localSettings.userName || ''}
-                onChange={e => handleChange('userName', e.target.value)}
+                onChange={(e) => handleChange('userName', e.target.value)}
                 className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
                 placeholder="Enter your name"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="logo" className="text-sm font-semibold text-slate-300">Custom App Icon</label>
+              <label htmlFor="logo" className="text-sm font-semibold text-slate-300">
+                Custom App Icon
+              </label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-950 shrink-0">
                   {localSettings.logo ? (
-                    <img src={localSettings.logo} alt="Custom Logo" className="w-full h-full object-cover" />
+                    <img
+                      src={localSettings.logo}
+                      alt="Custom Logo"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-700">
                       <ImageIcon size={24} />
@@ -200,7 +228,14 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   )}
                 </div>
                 <div className="flex-1">
-                  <input id="logo" type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+                  <input
+                    id="logo"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    accept="image/*"
+                  />
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -232,7 +267,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="weekdayBudget" className="text-sm font-semibold text-slate-300">Weekday Budget</label>
+              <label htmlFor="weekdayBudget" className="text-sm font-semibold text-slate-300">
+                Weekday Budget
+              </label>
               <div className="relative group">
                 <input
                   id="weekdayBudget"
@@ -242,16 +279,20 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   pattern="[0-9]*"
                   value={localSettings.weekdayBudget || ''}
                   placeholder="300"
-                  onChange={e => handleBudgetChange('weekdayBudget', e.target.value)}
+                  onChange={(e) => handleBudgetChange('weekdayBudget', e.target.value)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
                   {...testId('settings-weekday-budget')}
                 />
-                <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">{localSettings.currency}</span>
+                <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">
+                  {localSettings.currency}
+                </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="weekendBudget" className="text-sm font-semibold text-slate-300">Weekend Budget</label>
+              <label htmlFor="weekendBudget" className="text-sm font-semibold text-slate-300">
+                Weekend Budget
+              </label>
               <div className="relative group">
                 <input
                   id="weekendBudget"
@@ -261,11 +302,13 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   pattern="[0-9]*"
                   value={localSettings.weekendBudget || ''}
                   placeholder="2000"
-                  onChange={e => handleBudgetChange('weekendBudget', e.target.value)}
+                  onChange={(e) => handleBudgetChange('weekendBudget', e.target.value)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
                   {...testId('settings-weekend-budget')}
                 />
-                <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">{localSettings.currency}</span>
+                <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">
+                  {localSettings.currency}
+                </span>
               </div>
             </div>
           </div>
@@ -278,13 +321,15 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           </h3>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="currency" className="text-sm font-semibold text-slate-300">Currency Symbol</label>
+              <label htmlFor="currency" className="text-sm font-semibold text-slate-300">
+                Currency Symbol
+              </label>
               <input
                 id="currency"
                 type="text"
                 enterKeyHint="done"
                 value={localSettings.currency}
-                onChange={e => handleChange('currency', e.target.value)}
+                onChange={(e) => handleChange('currency', e.target.value)}
                 className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-white"
                 placeholder="e.g. JPY, $, €"
               />
@@ -292,7 +337,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
 
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <label htmlFor="alarmThreshold" className="text-sm font-semibold text-slate-300">Alarm Threshold</label>
+                <label htmlFor="alarmThreshold" className="text-sm font-semibold text-slate-300">
+                  Alarm Threshold
+                </label>
                 <span className="text-xs font-bold bg-amber-900/30 text-amber-400 px-2 py-1 rounded-lg">
                   {Math.round(localSettings.alarmThreshold * 100)}%
                 </span>
@@ -305,33 +352,38 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   max="1.0"
                   step="0.05"
                   value={localSettings.alarmThreshold}
-                  onChange={e => handleChange('alarmThreshold', parseFloat(e.target.value))}
+                  onChange={(e) => handleChange('alarmThreshold', parseFloat(e.target.value))}
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-400 transition-all"
                 />
               </div>
               <p className="text-xs text-slate-500 leading-relaxed">
-                The dashboard turns <span className="text-amber-400 font-bold">yellow</span> when you spend {Math.round(localSettings.alarmThreshold * 100)}% of your daily budget.
+                The dashboard turns <span className="text-amber-400 font-bold">yellow</span> when
+                you spend {Math.round(localSettings.alarmThreshold * 100)}% of your daily budget.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="startDate" className="text-sm font-semibold text-slate-300">Start Date</label>
+                <label htmlFor="startDate" className="text-sm font-semibold text-slate-300">
+                  Start Date
+                </label>
                 <input
                   id="startDate"
                   type="date"
                   value={localSettings.startDate}
-                  onChange={e => handleChange('startDate', e.target.value)}
+                  onChange={(e) => handleChange('startDate', e.target.value)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="endDate" className="text-sm font-semibold text-slate-300">End Date <span className="font-normal text-slate-600">(Optional)</span></label>
+                <label htmlFor="endDate" className="text-sm font-semibold text-slate-300">
+                  End Date <span className="font-normal text-slate-600">(Optional)</span>
+                </label>
                 <input
                   id="endDate"
                   type="date"
                   value={localSettings.endDate || ''}
-                  onChange={e => handleChange('endDate', e.target.value || null)}
+                  onChange={(e) => handleChange('endDate', e.target.value || null)}
                   className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
@@ -358,7 +410,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
           <div className="space-y-4">
             <button
               type="button"
-              onClick={() => { handleShareFile().catch(console.error); }}
+              onClick={() => {
+                handleShareFile().catch(console.error);
+              }}
               className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 shadow-md"
             >
               <Share2 size={18} className="text-emerald-500" />
@@ -387,7 +441,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                 <div>
                   <h4 className="font-bold text-red-400 text-sm">Are you sure?</h4>
                   <p className="text-xs text-red-300/80 mt-1">
-                    This will permanently delete all expenses and reset your settings. This action cannot be undone.
+                    This will permanently delete all expenses and reset your settings. This action
+                    cannot be undone.
                   </p>
                 </div>
               </div>

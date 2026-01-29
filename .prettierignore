@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.git
+playwright-report
+.cache
+coverage
+*.log
+*.png
+*.jpg
+*.svg
+public
+/.idea
+/.vscode

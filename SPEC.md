@@ -52,7 +52,7 @@ Files: see `types.ts` for exact shapes.
 
 - Status determination (BudgetStatus):
   - `OverBudget` if spent > totalAvailable.
-  - `Warning` if spent >= totalAvailable * alarmThreshold.
+  - `Warning` if spent >= totalAvailable \* alarmThreshold.
   - Otherwise `UnderAlarm`.
 
 - Past vs Future behavior (immutable past):
