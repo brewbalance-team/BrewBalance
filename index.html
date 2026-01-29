@@ -1,102 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BrewBalance" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="BrewBalance" />
+    <!-- Prevent caching to ensure PWA updates -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-  <!-- Prevent caching to ensure PWA updates -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+    <title>BrewBalance</title>
 
-  <title>BrewBalance</title>
+    <!-- App Icon -->
+    <link rel="icon" type="image/png" href="/Default app icon.png" />
 
-  <!-- App Icon -->
-  <link rel="icon" type="image/png" href="/Default app icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Reset tap highlight color */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
 
-  <link rel="manifest" href="/manifest.json" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Reset tap highlight color */
-    * {
-      -webkit-tap-highlight-color: transparent;
-    }
+      /* Custom scrollbar for a cleaner look */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
 
-    /* Custom scrollbar for a cleaner look */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+        /* Slate 900 */
+      }
 
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-      /* Slate 900 */
-    }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        /* Slate 700 */
+        border-radius: 3px;
+      }
 
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      /* Slate 700 */
-      border-radius: 3px;
-    }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+        /* Slate 600 */
+      }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-      /* Slate 600 */
-    }
+      /* Remove up/down arrows from number inputs */
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
 
-    /* Remove up/down arrows from number inputs */
-    /* Chrome, Safari, Edge, Opera */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+      /* Firefox */
+      input[type='number'] {
+        -moz-appearance: textfield;
+      }
 
-    /* Firefox */
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
+      /* Safe area padding utilities for iOS PWA */
+      .pt-safe-top {
+        padding-top: env(safe-area-inset-top);
+      }
 
-    /* Safe area padding utilities for iOS PWA */
-    .pt-safe-top {
-      padding-top: env(safe-area-inset-top);
-    }
+      .pb-safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
 
-    .pb-safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom);
-    }
+      /* CRITICAL FIX FOR IOS PWA KEYBOARD */
+      /* Force user-select text on inputs to ensure focus works */
+      input,
+      textarea,
+      select {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+          "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+        }
+      }
+    </script>
+  </head>
 
-    /* CRITICAL FIX FOR IOS PWA KEYBOARD */
-    /* Force user-select text on inputs to ensure focus works */
-    input,
-    textarea,
-    select {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-  </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
-  }
-}
-</script>
-</head>
-
-<body class="bg-slate-950 text-slate-50 antialiased">
-  <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
-
+  <body class="bg-slate-950 text-slate-50 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
