@@ -7,6 +7,8 @@ import importPlugin from 'eslint-plugin-import';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactRefreshPlugin from 'eslint-plugin-react-refresh';
 import globals from 'globals';
+import prettierPlugin from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
 
 export default [
   {
@@ -30,9 +32,9 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescriptEslint,
-      'react': reactPlugin,
+      react: reactPlugin,
       'react-hooks': reactHooksPlugin,
-      'import': importPlugin,
+      import: importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       'react-refresh': reactRefreshPlugin,
     },
@@ -80,4 +82,7 @@ export default [
       },
     },
   },
+  // Integrate Prettier: run Prettier as an ESLint rule and disable conflicting ESLint rules
+  prettierPlugin.configs.recommended,
+  prettierConfig,
 ];

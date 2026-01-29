@@ -10,8 +10,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/10exO18Zu29uJIhshYh7i3e
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
@@ -26,11 +25,13 @@ The application includes a comprehensive test suite using Playwright for end-to-
 ### Running Tests
 
 1. Install Playwright browsers:
+
    ```bash
    npx playwright install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -43,6 +44,7 @@ The application includes a comprehensive test suite using Playwright for end-to-
 ### Test Coverage
 
 The test suite covers:
+
 - App loading and navigation
 - Adding expense entries
 - Settings configuration

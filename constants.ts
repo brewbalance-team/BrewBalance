@@ -1,4 +1,3 @@
-
 import { Settings } from './types';
 import { getTodayISO } from './utils/dateUtils';
 
