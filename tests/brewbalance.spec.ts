@@ -6,8 +6,8 @@ test.describe('BrewBalance App', () => {
     });
 
     test('should load the dashboard', async ({ page }) => {
-        // Wait for the page to load completely
-        await page.waitForLoadState('networkidle');
+        // Wait for the app title to appear (more reliable than networkidle)
+        await page.locator('[data-testid="app-title"]').waitFor();
 
         // Check that the app title is visible
         await expect(page.locator('[data-testid="app-title"]')).toBeVisible();
