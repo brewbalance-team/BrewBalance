@@ -20,6 +20,8 @@ export const DEFAULT_SETTINGS: Settings = {
 export const STORAGE_KEYS = {
   SETTINGS: 'brewbalance_settings',
   ENTRIES: 'brewbalance_entries',
+  TRANSACTIONS: 'brewbalance_transactions',
+  CHECKPOINTS: 'brewbalance_checkpoints',
 };
 
 export const APP_COLORS = {

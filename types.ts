@@ -64,3 +64,53 @@ export interface DailyStats {
 }
 
 export type TabView = 'dashboard' | 'add' | 'calendar' | 'history' | 'settings';
+
+export enum TransactionType {
+  ENTRY_ADDED = 'ENTRY_ADDED',
+  SETTINGS_UPDATED = 'SETTINGS_UPDATED',
+  DAILY_BUDGET_CREATED = 'DAILY_BUDGET_CREATED',
+  CUSTOM_ROLLOVER_SET = 'CUSTOM_ROLLOVER_SET',
+  CHALLENGE_CREATED = 'CHALLENGE_CREATED',
+  CHALLENGE_ARCHIVED = 'CHALLENGE_ARCHIVED',
+}
+
+export interface BaseTransaction {
+  id: string; // uuid
+  type: TransactionType;
+  timestamp: number; // epoch ms
+}
+
+export interface EntryAddedTransaction extends BaseTransaction {
+  type: TransactionType.ENTRY_ADDED;
+  entry: Entry;
+}
+
+export interface SettingsUpdatedTransaction extends BaseTransaction {
+  type: TransactionType.SETTINGS_UPDATED;
+  settingsPatch: Partial<Settings>;
+}
+
+export interface DailyBudgetCreatedTransaction extends BaseTransaction {
+  type: TransactionType.DAILY_BUDGET_CREATED;
+  date: string; // YYYY-MM-DD
+  baseBudget: number;
+  rollover: number;
+}
+
+export interface CustomRolloverSetTransaction extends BaseTransaction {
+  type: TransactionType.CUSTOM_ROLLOVER_SET;
+  date: string; // YYYY-MM-DD
+  rollover: number;
+}
+
+export interface ChallengeTransaction extends BaseTransaction {
+  type: TransactionType.CHALLENGE_CREATED | TransactionType.CHALLENGE_ARCHIVED;
+  challenge: Challenge;
+}
+
+export type Transaction =
+  | EntryAddedTransaction
+  | SettingsUpdatedTransaction
+  | DailyBudgetCreatedTransaction
+  | CustomRolloverSetTransaction
+  | ChallengeTransaction;
