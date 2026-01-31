@@ -55,6 +55,20 @@ Files: see `types.ts` for exact shapes.
   - `Warning` if spent >= totalAvailable * alarmThreshold.
   - Otherwise `UnderAlarm`.
 
+- Past vs Future behavior (immutable past):
+  - Definition: any calendar date strictly before the user's local "today" (i.e. `date < today`) is considered "past". The date `today` and all future dates (`>= today`) are considered current/future for the purposes of settings changes.
+  - Rule: computed stats and budgets for past dates are fixed snapshots and MUST NOT change when the user edits global settings (daily budgets, alarm thresholds, recurrence rules, etc.). Only `today` and future dates are recomputed using the current settings.
+  - Example: if the user's per-day base budget was 300 yen for the last week and they change the per-day budget to 200 yen today, all daily budgets for dates before today remain 300 yen; `today` and future dates use 200 yen.
+  - How this is represented: the system should persist, as part of the historical computation or audit trail, the effective base budget and rollover values that were used to derive each past date's `DailyStats`. This can be done by storing `appliedBaseBudget` and `appliedRollover` fields in past `DailyStats` snapshots or by keeping a time-indexed settings history.
+  - Entries: expense entries themselves are never rewritten by settings changes; they continue to apply to the fixed past `DailyStats` that were computed for their dates.
+  - Rollover handling: rollovers that were produced by past dates remain as historical values. Future rollovers (starting from `today`) are recomputed using the new settings when needed.
+
+- Implementation note for `calculateStats`:
+  - When computing stats for a target date < today, `calculateStats` must use the persisted/applied budget values for that date rather than deriving them solely from the current `settings` object.
+  - For `date >= today`, `calculateStats` may derive budgets directly from the current `settings`, `customBudgets`, and `customRollovers`.
+  - If the app does not persist per-date applied budgets yet, it should either persist a compact settings history (state snapshots with effective-from dates) or persist the per-day applied values at the time they are first materialized so that they remain immutable thereafter.
+
+
 ---
 
 ## Challenges (Goals)
