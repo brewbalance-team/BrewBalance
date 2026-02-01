@@ -1,6 +1,12 @@
-import { Transaction, TransactionType, Settings, Entry } from '../types';
-import { loadTransactions } from './transactionStore';
+import {
+  Transaction,
+  TransactionType,
+  Settings,
+  Entry,
+} from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
+
+import { loadTransactions } from './transactionStore';
 
 /**
  * Replay transactions to derive a minimal app state.
@@ -23,41 +29,48 @@ export const replay = (transactions?: Transaction[], throughDate?: string) => {
     if (throughDate && tx.timestamp > new Date(throughDate).getTime()) break;
 
     switch (tx.type) {
-      case TransactionType.SETTINGS_UPDATED:
-        // @ts-ignore - settingsPatch exists on this tx variant
-        settings = { ...settings, ...(tx as any).settingsPatch };
+      case TransactionType.SETTINGS_UPDATED: {
+        const settingsTx = tx;
+        settings = { ...settings, ...settingsTx.settingsPatch };
         break;
-      case TransactionType.ENTRY_ADDED:
-        // @ts-ignore
-        entries.push((tx as any).entry as Entry);
+      }
+      case TransactionType.ENTRY_ADDED: {
+        const entryTx = tx;
+        entries.push(entryTx.entry);
         break;
-      case TransactionType.DAILY_BUDGET_CREATED:
-        // @ts-ignore
-        dailyBudgets[(tx as any).date] = {
-          // @ts-ignore
-          baseBudget: (tx as any).baseBudget,
-          // @ts-ignore
-          rollover: (tx as any).rollover,
+      }
+      case TransactionType.DAILY_BUDGET_CREATED: {
+        const budgetTx = tx;
+        dailyBudgets[budgetTx.date] = {
+          baseBudget: budgetTx.baseBudget,
+          rollover: budgetTx.rollover,
         };
         break;
-      case TransactionType.CUSTOM_ROLLOVER_SET:
+      }
+      case TransactionType.CUSTOM_ROLLOVER_SET: {
+        const rolloverTx = tx;
         // We represent this as a generated daily budget override in the map
-        // @ts-ignore
-        dailyBudgets[(tx as any).date] = dailyBudgets[(tx as any).date] || { baseBudget: 0, rollover: 0 };
-        // @ts-ignore
-        dailyBudgets[(tx as any).date].rollover = (tx as any).rollover;
+        const existing = dailyBudgets[rolloverTx.date] || {
+          baseBudget: 0,
+          rollover: 0,
+        };
+        dailyBudgets[rolloverTx.date] = { ...existing, rollover: rolloverTx.rollover };
         break;
+      }
       case TransactionType.CHALLENGE_CREATED:
-      case TransactionType.CHALLENGE_ARCHIVED:
+      case TransactionType.CHALLENGE_ARCHIVED: {
         // Challenges are part of settings in our model; apply to settings if present
-        // @ts-ignore
-        if ((tx as any).challenge) {
+        // For now, leave challenge handling to a later pass
+        const challengeTx = tx;
+        if (challengeTx.challenge) {
           // Apply to active/past depending on archived flag
-          // For now, leave challenge handling to a later pass
         }
         break;
-      default:
-        break;
+      }
+      default: {
+        const _: never = tx;
+        return _;
+      }
     }
   }
 
