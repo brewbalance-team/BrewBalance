@@ -68,7 +68,6 @@ Files: see `types.ts` for exact shapes.
   - For `date >= today`, `calculateStats` may derive budgets directly from the current `settings`, `customBudgets`, and `customRollovers`.
   - If the app does not persist per-date applied budgets yet, it should either persist a compact settings history (state snapshots with effective-from dates) or persist the per-day applied values at the time they are first materialized so that they remain immutable thereafter.
 
-
 ---
 
 ## Challenges (Goals)
