@@ -8,7 +8,7 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactRefreshPlugin from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import prettierPlugin from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
+import prettierConfig from 'eslint-config-prettier/flat';
 
 export default [
   {
@@ -37,6 +37,7 @@ export default [
       import: importPlugin,
       'jsx-a11y': jsxA11yPlugin,
       'react-refresh': reactRefreshPlugin,
+      prettier: prettierPlugin,
     },
     settings: {
       react: {
@@ -71,6 +72,7 @@ export default [
       ],
       'import/no-unresolved': 'error',
       'jsx-a11y/anchor-is-valid': 'off', // For Next.js or similar, but adjust as needed
+      'prettier/prettier': 'error',
     },
   },
   // Node.js config files
@@ -82,7 +84,6 @@ export default [
       },
     },
   },
-  // Integrate Prettier: run Prettier as an ESLint rule and disable conflicting ESLint rules
-  prettierPlugin.configs.recommended,
+  // Integrate Prettier: disable conflicting ESLint rules (flat config)
   prettierConfig,
 ];
