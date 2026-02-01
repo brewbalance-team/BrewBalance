@@ -34,6 +34,7 @@ Data model changes
 - Consider adding lightweight persisted checkpoints that store derived `DailyStats` up to a checkpoint date to avoid full replay on startup.
 
 Migration steps — Ledger (transaction log)
+
 1. Define `Transaction` model and storage keys
    - Create `types.Transaction` union and `STORAGE_KEYS.TRANSACTIONS`, `STORAGE_KEYS.CHECKPOINTS`.
 2. Implement storage helpers
@@ -83,6 +84,7 @@ Risks & mitigation
 - Risk: subtle differences between computed historical budgets and replayed/serialized ones — mitigate by validating before finalizing migration and preserving original computed values when seeding snapshots/transactions.
 
 Recommended next steps
+
 1. Proceed with the ledger approach: design `Transaction` types, implement `transactionStore` and `replayEngine`, and write a migration that seeds transactions and creates an initial checkpoint.
 2. Implement the replay engine and transaction append helpers, then seed transactions for existing `entries` and historical `DAILY_BUDGET` items using the current computed `statsMap` to preserve history.
 3. Add tests for replay determinism and migration correctness, then stage rollout with backups and a migration flag.

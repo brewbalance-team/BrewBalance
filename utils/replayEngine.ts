@@ -1,9 +1,4 @@
-import {
-  Transaction,
-  TransactionType,
-  Settings,
-  Entry,
-} from '../types';
+import { Transaction, TransactionType, Settings, Entry } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 
 import { loadTransactions } from './transactionStore';
