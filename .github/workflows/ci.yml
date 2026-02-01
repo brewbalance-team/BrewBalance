@@ -28,7 +28,9 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npx tsc
+      - name: Run unit tests
+        run: npm run test:unit -- --reporter=github
       - name: Install Playwright deps
         run: npx playwright install --with-deps
-      - name: Run tests
-        run: npm run test -- --reporter=github
+      - name: Run End-to-End tests
+        run: npm run test:e2e -- --reporter=github

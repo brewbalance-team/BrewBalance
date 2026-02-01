@@ -1,7 +1,9 @@
 import { Transaction, TransactionType, Settings, Entry } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 
-import { loadTransactions } from './transactionStore';
+import { loadTransactions, appendTransaction } from './transactionStore';
+import { calculateStats } from './financeHelpers';
+import { formatDateISO, addDays } from './dateUtils';
 
 /**
  * Replay transactions to derive a minimal app state.
@@ -75,4 +77,77 @@ export const replay = (transactions?: Transaction[], throughDate?: string) => {
     dailyBudgets,
     transactions: txs,
   };
+};
+
+/**
+ * Ensure a DAILY_BUDGET_CREATED transaction exists for `date`.
+ * If missing, this will compute effective settings and entries up to `date`,
+ * derive the day's baseBudget and starting rollover from `calculateStats`,
+ * append a `DAILY_BUDGET_CREATED` transaction, and return the budget object.
+ */
+export const ensureDailyBudgetForDate = (date: string, transactions?: Transaction[]) => {
+  const txs = transactions && transactions.length ? transactions : loadTransactions();
+  const { settings, entries, dailyBudgets } = replay(txs, date);
+
+  if (dailyBudgets[date]) {
+    return dailyBudgets[date];
+  }
+
+  // Compute stats up to this date to derive the applied budget/rollover
+  const statsMap = calculateStats(settings, entries, date);
+  const dayStats = statsMap[date];
+  if (!dayStats) {
+    // If stats couldn't be derived, fall back to zeroed budget
+    const fallback = { baseBudget: 0, rollover: 0 };
+    const tx = {
+      id: `tx-daily-${date}`,
+      type: TransactionType.DAILY_BUDGET_CREATED,
+      timestamp: Date.now(),
+      date,
+      baseBudget: fallback.baseBudget,
+      rollover: fallback.rollover,
+    } as Transaction;
+    appendTransaction(tx);
+    return fallback;
+  }
+
+  const budget = { baseBudget: dayStats.baseBudget, rollover: dayStats.rollover };
+  const tx = {
+    id: `tx-daily-${date}`,
+    type: TransactionType.DAILY_BUDGET_CREATED,
+    timestamp: Date.now(),
+    date,
+    baseBudget: budget.baseBudget,
+    rollover: budget.rollover,
+  } as Transaction;
+  appendTransaction(tx);
+  return budget;
+};
+
+/**
+ * Materialize DAILY_BUDGET_CREATED transactions for all past dates from
+ * `settings.startDate` up to `throughDate` (inclusive). Returns the list of
+ * dates that were materialized.
+ */
+export const materializeUpTo = (throughDate: string) => {
+  const txs = loadTransactions();
+  const { settings } = replay(txs);
+  const start = settings.startDate || formatDateISO(new Date());
+
+  const materialized: string[] = [];
+  let cur = start;
+  while (cur <= throughDate) {
+    // Only materialize strictly before today to lock history
+    const today = formatDateISO(new Date());
+    if (cur < today) {
+      const existing = replay(txs, cur).dailyBudgets[cur];
+      if (!existing) {
+        ensureDailyBudgetForDate(cur, txs);
+        materialized.push(cur);
+      }
+    }
+    cur = addDays(cur, 1);
+  }
+
+  return materialized;
 };
