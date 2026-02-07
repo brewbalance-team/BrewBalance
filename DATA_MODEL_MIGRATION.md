@@ -5,6 +5,7 @@
 ## Phase 1 Completed (Feb 7, 2026)
 
 All foundational infrastructure for transaction log has been implemented and tested:
+
 - ✅ Transaction types and storage keys defined
 - ✅ Transaction storage helpers implemented
 - ✅ Replay engine with deterministic daily budget creation
@@ -48,11 +49,13 @@ Data model changes
 ## Completed Implementation Details (Feb 7, 2026)
 
 ### 1. Data Model (types.ts)
+
 - `TransactionType` enum: `ENTRY_ADDED`, `SETTINGS_UPDATED`, `DAILY_BUDGET_CREATED`, `CUSTOM_ROLLOVER_SET`, `CHALLENGE_CREATED`, `CHALLENGE_ARCHIVED`
 - `Transaction` union type with specific transaction interfaces
 - All transactions have `id`, `type`, and `timestamp` fields
 
 ### 2. Storage Layer (utils/transactionStore.ts)
+
 - `loadTransactions()` - retrieves all transactions from storage
 - `saveTransactions(txs)` - persists transactions
 - `appendTransaction(tx)` - adds transaction with deduplication by ID and timestamp sorting
@@ -60,6 +63,7 @@ Data model changes
 - Private `parseJSON()` utility for safe JSON parsing with fallback
 
 ### 3. Replay Engine (utils/replayEngine.ts)
+
 - `replay(transactions?, throughDate?, store?)` - derives app state by replaying transactions in chronological order
   - Returns derived `settings`, `entries`, `dailyBudgets` map, and original transactions
   - Optional date filter to replay only through a specific date
@@ -72,6 +76,7 @@ Data model changes
   - Returns list of newly materialized dates
 
 ### 4. Migration Utility (utils/migration.ts)
+
 - `isMigrated(store?)` - checks if transaction log already exists (app has been migrated)
 - `migrateFromLegacyModel(store?)` - one-time migration from legacy localStorage to transaction log
   - Loads existing `entries` and `settings` from localStorage
@@ -83,6 +88,7 @@ Data model changes
 - Private helpers: `loadLegacySettings()`, `loadLegacyEntries()`
 
 ### 5. App Integration (App.tsx)
+
 - Calls `migrateFromLegacyModel()` on app mount via `useRef` to prevent repeat migrations
 - Loads initial state via `replay()` for both `settings` and `entries`
 - New entries are appended to transaction log via `appendTransaction()` when added
@@ -90,6 +96,7 @@ Data model changes
 - Maintains backward compatibility: if no transactions exist, falls back to defaults
 
 ### 6. Testing (test/unit/utils/migration.test.ts)
+
 - 8 migration tests covering:
   - `isMigrated()` returns false before and true after migration
   - Migration is idempotent
