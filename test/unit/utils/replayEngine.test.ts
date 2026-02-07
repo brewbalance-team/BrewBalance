@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { replay, ensureDailyBudgetForDate, materializeUpTo } from '../../../utils/replayEngine';
-import { clearTransactions } from '../../../utils/transactionStore';
+import { appendTransaction, clearTransactions } from '../../../utils/transactionStore';
 import { setDefaultDataStore, InMemoryDataStore } from '../../../utils/datastore';
+import { Transaction, TransactionType } from '../../../types';
 
 let store: InMemoryDataStore;
 beforeEach(() => {
@@ -40,5 +41,51 @@ describe('replayEngine basic', () => {
     const materialized = materializeUpTo(yISO);
     // materializeUpTo returns an array of dates (may be empty if startDate >= throughDate)
     expect(Array.isArray(materialized)).toBe(true);
+  });
+
+  it('replay includes same-day transactions when using throughDate', () => {
+    const txs: Transaction[] = [
+      {
+        id: 'tx-settings-1',
+        type: TransactionType.SETTINGS_UPDATED,
+        timestamp: new Date('2026-01-15T12:00:00.000Z').getTime(),
+        settingsPatch: {
+          startDate: '2026-01-15',
+          weekdayBudget: 1500,
+          weekendBudget: 1500,
+        },
+      },
+      {
+        id: 'tx-settings-2',
+        type: TransactionType.SETTINGS_UPDATED,
+        timestamp: new Date('2026-01-16T12:00:00.000Z').getTime(),
+        settingsPatch: {
+          weekdayBudget: 2000,
+          weekendBudget: 2000,
+        },
+      },
+    ];
+
+    const res = replay(txs, '2026-01-15');
+    expect(res.settings.weekdayBudget).toEqual(1500);
+    expect(res.settings.weekendBudget).toEqual(1500);
+  });
+
+  it('ensureDailyBudgetForDate respects same-day settings updates', () => {
+    const date = '2026-01-15';
+
+    appendTransaction({
+      id: 'tx-settings-initial',
+      type: TransactionType.SETTINGS_UPDATED,
+      timestamp: new Date('2026-01-15T12:00:00.000Z').getTime(),
+      settingsPatch: {
+        startDate: date,
+        weekdayBudget: 1500,
+        weekendBudget: 1500,
+      },
+    });
+
+    const budget = ensureDailyBudgetForDate(date);
+    expect(budget.baseBudget).toEqual(1500);
   });
 });
