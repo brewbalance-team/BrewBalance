@@ -1,6 +1,18 @@
 # Data Model Migration Plan
 
-Purpose
+**Status: Steps 1-6 Complete** ✅
+
+## Phase 1 Completed (Feb 7, 2026)
+
+All foundational infrastructure for transaction log has been implemented and tested:
+- ✅ Transaction types and storage keys defined
+- ✅ Transaction storage helpers implemented
+- ✅ Replay engine with deterministic daily budget creation
+- ✅ Migration utility to seed transactions from legacy localStorage
+- ✅ App.tsx integrated with replay engine for immutable history
+- ✅ Comprehensive unit tests (12 passing tests)
+
+## Purpose
 
 - Describe current data model and runtime behavior.
 - Define desired state to enforce immutable past budgets.
@@ -33,7 +45,66 @@ Data model changes
 - Add storage keys in `constants.ts`: `STORAGE_KEYS.TRANSACTIONS` and `STORAGE_KEYS.CHECKPOINTS`.
 - Consider adding lightweight persisted checkpoints that store derived `DailyStats` up to a checkpoint date to avoid full replay on startup.
 
-Migration steps — Ledger (transaction log)
+## Completed Implementation Details (Feb 7, 2026)
+
+### 1. Data Model (types.ts)
+- `TransactionType` enum: `ENTRY_ADDED`, `SETTINGS_UPDATED`, `DAILY_BUDGET_CREATED`, `CUSTOM_ROLLOVER_SET`, `CHALLENGE_CREATED`, `CHALLENGE_ARCHIVED`
+- `Transaction` union type with specific transaction interfaces
+- All transactions have `id`, `type`, and `timestamp` fields
+
+### 2. Storage Layer (utils/transactionStore.ts)
+- `loadTransactions()` - retrieves all transactions from storage
+- `saveTransactions(txs)` - persists transactions
+- `appendTransaction(tx)` - adds transaction with deduplication by ID and timestamp sorting
+- `clearTransactions()` - clears all transactions (for reset/testing)
+- Private `parseJSON()` utility for safe JSON parsing with fallback
+
+### 3. Replay Engine (utils/replayEngine.ts)
+- `replay(transactions?, throughDate?, store?)` - derives app state by replaying transactions in chronological order
+  - Returns derived `settings`, `entries`, `dailyBudgets` map, and original transactions
+  - Optional date filter to replay only through a specific date
+  - Deterministic processing of transaction types; side effects forbidden (pure function)
+- `ensureDailyBudgetForDate(date, transactions?)` - creates a DAILY_BUDGET_CREATED transaction if missing
+  - Uses `calculateStats` from financeHelpers to derive the applicable budget
+  - Idempotent with deduplication by date
+- `materializeUpTo(throughDate)` - ensures daily budgets exist for all past dates
+  - Only materializes dates strictly before today to lock history
+  - Returns list of newly materialized dates
+
+### 4. Migration Utility (utils/migration.ts)
+- `isMigrated(store?)` - checks if transaction log already exists (app has been migrated)
+- `migrateFromLegacyModel(store?)` - one-time migration from legacy localStorage to transaction log
+  - Loads existing `entries` and `settings` from localStorage
+  - Creates `SETTINGS_UPDATED` transaction with timestamp 0 (ensures ordered processing)
+  - Creates `ENTRY_ADDED` transactions for each entry (sorted by timestamp)
+  - Materializes all past dates to lock historical budgets
+  - Returns `MigrationReport` with summary of created transactions and materialized dates
+  - Idempotent: ignores re-runs if already migrated
+- Private helpers: `loadLegacySettings()`, `loadLegacyEntries()`
+
+### 5. App Integration (App.tsx)
+- Calls `migrateFromLegacyModel()` on app mount via `useRef` to prevent repeat migrations
+- Loads initial state via `replay()` for both `settings` and `entries`
+- New entries are appended to transaction log via `appendTransaction()` when added
+- `handleReset()` now also clears the transaction log via `clearTransactions()`
+- Maintains backward compatibility: if no transactions exist, falls back to defaults
+
+### 6. Testing (test/unit/utils/migration.test.ts)
+- 8 migration tests covering:
+  - `isMigrated()` returns false before and true after migration
+  - Migration is idempotent
+  - Entries are preserved and replayed
+  - Settings are preserved and replayed
+  - Transactions are created in correct order (settings first, then entries)
+  - Report includes materialized dates
+  - Settings transaction has timestamp 0 for determinism
+- All tests pass with isolated in-memory storage
+
+---
+
+## Original Plan (for reference)
+
+Purpose
 
 1. Define `Transaction` model and storage keys
    - Create `types.Transaction` union and `STORAGE_KEYS.TRANSACTIONS`, `STORAGE_KEYS.CHECKPOINTS`.

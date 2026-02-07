@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
-import { Settings, Entry, TabView, ChallengeStatus, Challenge } from './types';
+import { Settings, Entry, TabView, ChallengeStatus, Challenge, TransactionType } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
 import {
   calculateStats,
@@ -9,6 +9,9 @@ import {
 } from './utils/financeHelpers';
 import { getTodayISO, addDays, addMonths } from './utils/dateUtils';
 import { testId } from './utils/testUtils';
+import { replay } from './utils/replayEngine';
+import { migrateFromLegacyModel } from './utils/migration';
+import { appendTransaction, clearTransactions } from './utils/transactionStore';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import SettingsView from './components/Settings';
@@ -19,55 +22,50 @@ import EditEntryModal from './components/EditEntryModal';
 import CreativeLogo from './components/CreativeLogo';
 
 const App: React.FC = () => {
-  // Load settings from local storage, merging with defaults to ensure robustness
+  // Track whether migration has been attempted
+  const migrationAttempted = useRef(false);
+
+  // Load settings from replay engine (derived from transaction log)
   const [settings, setSettings] = useState<Settings>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<Settings>;
-        // Ensure defaults are merged
-        const merged = { ...DEFAULT_SETTINGS, ...parsed };
-        return merged as Settings;
-      }
-    } catch (e) {
-      console.error('Failed to load settings:', e);
-    }
-    // If no settings found, use local today as start date
-    const defaultSettings: Settings = { ...DEFAULT_SETTINGS, startDate: getTodayISO() };
-    return defaultSettings;
+    const { settings: replayedSettings } = replay();
+    return replayedSettings || DEFAULT_SETTINGS;
   });
 
-  // Load entries from local storage
+  // Load entries from replay engine (derived from transaction log)
   const [entries, setEntries] = useState<Entry[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.ENTRIES);
-      return stored ? (JSON.parse(stored) as Entry[]) : [];
-    } catch (e) {
-      console.error('Failed to load entries:', e);
-      return [];
-    }
+    const { entries: replayedEntries } = replay();
+    return replayedEntries || [];
   });
 
   const [currentTab, setCurrentTab] = useState<TabView>('dashboard');
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 
-  // Persist settings changes
+  // Perform one-time migration from legacy localStorage model to transaction log
+  // This effect syncs external storage state with React state after migration,
+  // which requires setState calls in the effect.
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
-    } catch (e) {
-      console.error('Failed to save settings to localStorage (Quota exceeded?):', e);
-    }
-  }, [settings]);
+    if (!migrationAttempted.current) {
+      migrationAttempted.current = true;
+      try {
+        const report = migrateFromLegacyModel();
+        console.log('Migration report:', report);
 
-  // Persist entries changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(entries));
-    } catch (e) {
-      console.error('Failed to save entries to localStorage (Quota exceeded?):', e);
+        // If migration happened (not already migrated), reload state from transactions
+        if (!report.alreadyMigrated) {
+          const { settings: migratedSettings, entries: migratedEntries } = replay();
+          if (migratedSettings) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSettings(migratedSettings);
+          }
+          if (migratedEntries) {
+            setEntries(migratedEntries);
+          }
+        }
+      } catch (e) {
+        console.error('Migration failed:', e);
+      }
     }
-  }, [entries]);
+  }, []);
 
   const statsMap = useMemo(() => {
     const today = new Date();
@@ -186,6 +184,14 @@ const App: React.FC = () => {
       timestamp: Date.now(),
     };
     setEntries((prev) => [...prev, newEntry]);
+
+    // Append transaction for audit log and replay
+    appendTransaction({
+      id: `tx-entry-${newEntry.id}`,
+      type: TransactionType.ENTRY_ADDED,
+      timestamp: newEntry.timestamp,
+      entry: newEntry,
+    });
   };
 
   const handleUpdateEntry = (updatedEntry: Entry) => {
@@ -200,6 +206,9 @@ const App: React.FC = () => {
     // Clear local storage explicitly
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.ENTRIES);
+
+    // Clear transaction log
+    clearTransactions();
 
     // Create a fresh copy of defaults and ensure local date
     const freshSettings = {

@@ -2,6 +2,7 @@ import { Transaction, TransactionType, Settings, Entry } from '../types';
 import { DEFAULT_SETTINGS } from '../constants';
 
 import { loadTransactions, appendTransaction } from './transactionStore';
+import { DataStore } from './datastore';
 import { calculateStats } from './financeHelpers';
 import { formatDateISO, addDays } from './dateUtils';
 
@@ -12,9 +13,14 @@ import { formatDateISO, addDays } from './dateUtils';
  *
  * Returns an object with the derived `settings`, `entries`, and a map of
  * `dailyBudgets` seeded by `DAILY_BUDGET_CREATED` transactions.
+ *
+ * @param {Transaction[]} [transactions] - Optional pre-loaded transactions. If not provided, loads from store.
+ * @param {string} [throughDate] - Optional ISO date string to replay through (inclusive).
+ * @param {DataStore} [store] - Optional custom DataStore instance. Only used if transactions are not provided.
+ * @returns Replay result containing settings, entries, daily budgets, and transactions.
  */
-export const replay = (transactions?: Transaction[], throughDate?: string) => {
-  const txs = transactions && transactions.length ? transactions : loadTransactions();
+export const replay = (transactions?: Transaction[], throughDate?: string, store?: DataStore) => {
+  const txs = transactions && transactions.length ? transactions : loadTransactions(store);
   // Already sorted by transactionStore but ensure order
   txs.sort((a, b) => a.timestamp - b.timestamp);
 
