@@ -1,11 +1,13 @@
 import { Settings, Entry, DailyStats, BudgetStatus, Challenge } from '../types';
 
 import { isWeekend, addDays, formatDateISO } from './dateUtils';
+import { getCurrentDate } from './clock';
 
 export const calculateStats = (
   settings: Settings,
   entries: Entry[],
   targetDateStr?: string, // If provided, ensures calculation goes up to at least this date
+  lockedBudgets?: Record<string, { baseBudget: number; rollover: number }>,
 ): Record<string, DailyStats> => {
   const statsMap: Record<string, DailyStats> = {};
 
@@ -23,7 +25,7 @@ export const calculateStats = (
 
   let currentDateStr = settings.startDate;
   // Determine the end date for calculation: Max of (Today, TargetDate, Last Entry Date)
-  const todayStr = formatDateISO(new Date());
+  const todayStr = formatDateISO(getCurrentDate());
   let endDateCalcStr = targetDateStr && targetDateStr > todayStr ? targetDateStr : todayStr;
 
   // If there are future entries beyond today/target, extend calculation
@@ -84,8 +86,12 @@ export const calculateStats = (
     // Determine Base Budget
     let baseBudget = 0;
     let isCustomBudget = false;
+    const lockedBudget = lockedBudgets?.[currentDateStr];
 
-    if (!settings.endDate || currentDateStr <= settings.endDate) {
+    if (lockedBudget) {
+      baseBudget = lockedBudget.baseBudget;
+      currentRollover = lockedBudget.rollover;
+    } else if (!settings.endDate || currentDateStr <= settings.endDate) {
       // Check for custom override first
       if (settings.customBudgets && settings.customBudgets[currentDateStr] !== undefined) {
         baseBudget = settings.customBudgets[currentDateStr]!;
@@ -207,7 +213,7 @@ export const calculateStats = (
 };
 
 export const calculateStreak = (statsMap: Record<string, DailyStats>): number => {
-  const today = formatDateISO(new Date());
+  const today = formatDateISO(getCurrentDate());
   let streak = 0;
   let checkDate = today;
 

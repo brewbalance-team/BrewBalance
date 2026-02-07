@@ -1,3 +1,5 @@
+import { getCurrentDate } from './clock';
+
 export const formatDateISO = (date: Date): string => {
   // Use local time for date string generation to respect user timezone
   const offset = date.getTimezoneOffset();
@@ -23,7 +25,7 @@ export const getMonthDates = (year: number, month: number): string[] => {
   return dates;
 };
 
-export const getTodayISO = (): string => formatDateISO(new Date());
+export const getTodayISO = (): string => formatDateISO(getCurrentDate());
 
 export const addDays = (dateStr: string, days: number): string => {
   // Treat dateStr as UTC midnight to avoid timezone shifting issues
