@@ -27,10 +27,16 @@ import { testId } from '../utils/testUtils';
 interface HistoryViewProps {
   entries: Entry[];
   settings: Settings;
+  dailyBudgets: Record<string, { baseBudget: number; rollover: number }>;
   onEditEntry: (entry: Entry) => void;
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntry }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({
+  entries,
+  settings,
+  dailyBudgets,
+  onEditEntry,
+}) => {
   const [viewMode, setViewMode] = useState<'expenses' | 'challenges'>('expenses');
   const currency =
     settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
@@ -58,7 +64,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
   const activeChallengeStatus = useMemo(() => {
     if (!settings.activeChallenge) return null;
 
-    const statsMap = calculateStats(settings, entries, todayISO);
+    const statsMap = calculateStats(settings, entries, todayISO, dailyBudgets);
 
     // Determine relevant date for stats
     const isPastEnd = todayISO > settings.activeChallenge.endDate;
@@ -69,7 +75,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
     const isFailed = isChallengeFailed(settings.activeChallenge, settings, savedSoFar, todayISO);
 
     return { isFailed, savedSoFar };
-  }, [settings, entries, todayISO]);
+  }, [settings, entries, todayISO, dailyBudgets]);
 
   // Combine Active and Past Challenges
   const allChallenges = useMemo(() => {

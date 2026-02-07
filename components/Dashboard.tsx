@@ -17,7 +17,9 @@ import {
 
 import { DailyStats, BudgetStatus, Settings, Challenge, ChallengeStatus } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
+import { getCurrentDate } from '../utils/clock';
 import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
+import { testId } from '../utils/testUtils';
 
 import ChallengeForm from './ChallengeForm';
 
@@ -197,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
 
   const currency =
     settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
-  const formattedDate = new Date().toLocaleDateString('en-US', {
+  const formattedDate = getCurrentDate().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
@@ -618,7 +620,10 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                     </div>
                     <span className="text-slate-500 font-black text-2xl">=</span>
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-white font-black text-2xl border-b-2 border-dashed border-slate-600">
+                      <span
+                        className="text-white font-black text-2xl border-b-2 border-dashed border-slate-600"
+                        {...testId('dashboard-total-budget')}
+                      >
                         {currency}
                         {Math.round(todayStats.totalAvailable)}
                       </span>

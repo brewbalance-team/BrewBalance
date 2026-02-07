@@ -10,5 +10,5 @@
  * @returns Object with data-testid property if in dev mode, empty object otherwise
  */
 export const testId = (testId: string) => {
-  return import.meta.env.DEV ? { 'data-testid': testId } : {};
+  return import.meta.env.DEV || import.meta.env.MODE === 'test' ? { 'data-testid': testId } : {};
 };

@@ -7,9 +7,11 @@ import {
   calculateStreak,
   calculateChallengeTotalBudget,
 } from './utils/financeHelpers';
-import { getTodayISO, addDays, addMonths } from './utils/dateUtils';
+import { getTodayISO, addDays, addMonths, isWeekend } from './utils/dateUtils';
 import { testId } from './utils/testUtils';
-import { replay } from './utils/replayEngine';
+import { now, getCurrentDate } from './utils/clock';
+import { replay, ensureDailyBudgetForDate, materializeUpTo } from './utils/replayEngine';
+import { makeCustomRolloverTx, makeSettingsUpdatedTx } from './utils/transactionHelpers';
 import { migrateFromLegacyModel } from './utils/migration';
 import { appendTransaction, clearTransactions } from './utils/transactionStore';
 import Dashboard from './components/Dashboard';
@@ -67,8 +69,10 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const dailyBudgets = replay().dailyBudgets;
+
   const statsMap = useMemo(() => {
-    const today = new Date();
+    const today = getCurrentDate();
     const futureDate = new Date(today);
     futureDate.setFullYear(today.getFullYear() + 5);
     const offset = futureDate.getTimezoneOffset();
@@ -76,8 +80,8 @@ const App: React.FC = () => {
       .toISOString()
       .split('T')[0];
 
-    return calculateStats(settings, entries, localEnd);
-  }, [settings, entries]);
+    return calculateStats(settings, entries, localEnd, dailyBudgets);
+  }, [settings, entries, dailyBudgets]);
 
   const streak = useMemo(() => calculateStreak(statsMap), [statsMap]);
 
@@ -175,13 +179,23 @@ const App: React.FC = () => {
     }
   }, [settings.activeChallenge, statsMap, settings]);
 
+  useEffect(() => {
+    const today = getTodayISO();
+    const yesterday = addDays(today, -1);
+    const isBudgetSet = settings.weekdayBudget > 0 || settings.weekendBudget > 0;
+    materializeUpTo(yesterday);
+    if (isBudgetSet) {
+      ensureDailyBudgetForDate(today);
+    }
+  }, [settings]);
+
   const handleAddEntry = (amount: number, note: string, date: string) => {
     const newEntry: Entry = {
       id: crypto.randomUUID(),
       date,
       amount,
       note,
-      timestamp: Date.now(),
+      timestamp: now(),
     };
     setEntries((prev) => [...prev, newEntry]);
 
@@ -286,6 +300,7 @@ const App: React.FC = () => {
             <HistoryView
               entries={entries}
               settings={settings}
+              dailyBudgets={dailyBudgets}
               onEditEntry={(entry) => setEditingEntry(entry)}
             />
           )}
@@ -297,6 +312,25 @@ const App: React.FC = () => {
               settings={settings}
               statsMap={statsMap}
               onSave={(newSettings) => {
+                const today = getTodayISO();
+                const existingBudget = dailyBudgets[today];
+                if (existingBudget) {
+                  const isWknd = isWeekend(today);
+                  const newBase =
+                    newSettings.customBudgets && newSettings.customBudgets[today] !== undefined
+                      ? newSettings.customBudgets[today]
+                      : isWknd
+                        ? newSettings.weekendBudget
+                        : newSettings.weekdayBudget;
+                  const delta = newBase - existingBudget.baseBudget;
+                  appendTransaction(makeSettingsUpdatedTx(newSettings));
+                  if (delta !== 0) {
+                    appendTransaction(makeCustomRolloverTx(today, existingBudget.rollover + delta));
+                  }
+                } else {
+                  appendTransaction(makeSettingsUpdatedTx(newSettings));
+                  ensureDailyBudgetForDate(today);
+                }
                 setSettings(newSettings);
                 setCurrentTab('dashboard');
               }}

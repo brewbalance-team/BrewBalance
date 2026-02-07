@@ -5,6 +5,7 @@ import { loadTransactions, appendTransaction } from './transactionStore';
 import { DataStore } from './datastore';
 import { calculateStats } from './financeHelpers';
 import { formatDateISO, addDays } from './dateUtils';
+import { now, getCurrentDate } from './clock';
 
 /**
  * Replay transactions to derive a minimal app state.
@@ -100,7 +101,7 @@ export const ensureDailyBudgetForDate = (date: string, transactions?: Transactio
   }
 
   // Compute stats up to this date to derive the applied budget/rollover
-  const statsMap = calculateStats(settings, entries, date);
+  const statsMap = calculateStats(settings, entries, date, dailyBudgets);
   const dayStats = statsMap[date];
   if (!dayStats) {
     // If stats couldn't be derived, fall back to zeroed budget
@@ -108,7 +109,7 @@ export const ensureDailyBudgetForDate = (date: string, transactions?: Transactio
     const tx = {
       id: `tx-daily-${date}`,
       type: TransactionType.DAILY_BUDGET_CREATED,
-      timestamp: Date.now(),
+      timestamp: now(),
       date,
       baseBudget: fallback.baseBudget,
       rollover: fallback.rollover,
@@ -121,7 +122,7 @@ export const ensureDailyBudgetForDate = (date: string, transactions?: Transactio
   const tx = {
     id: `tx-daily-${date}`,
     type: TransactionType.DAILY_BUDGET_CREATED,
-    timestamp: Date.now(),
+    timestamp: now(),
     date,
     baseBudget: budget.baseBudget,
     rollover: budget.rollover,
@@ -138,13 +139,13 @@ export const ensureDailyBudgetForDate = (date: string, transactions?: Transactio
 export const materializeUpTo = (throughDate: string) => {
   const txs = loadTransactions();
   const { settings } = replay(txs);
-  const start = settings.startDate || formatDateISO(new Date());
+  const start = settings.startDate || formatDateISO(getCurrentDate());
 
   const materialized: string[] = [];
   let cur = start;
   while (cur <= throughDate) {
     // Only materialize strictly before today to lock history
-    const today = formatDateISO(new Date());
+    const today = formatDateISO(getCurrentDate());
     if (cur < today) {
       const existing = replay(txs, cur).dailyBudgets[cur];
       if (!existing) {

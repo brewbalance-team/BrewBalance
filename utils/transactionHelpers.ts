@@ -5,8 +5,7 @@ import { saveTransactions, loadTransactions } from './transactionStore';
 import { getDefaultDataStore } from './datastore';
 import { calculateStats } from './financeHelpers';
 import { formatDateISO } from './dateUtils';
-
-const now = () => Date.now();
+import { now, getCurrentDate } from './clock';
 
 export const makeEntryAddedTx = (entry: Entry): Transaction => ({
   id: `tx-${entry.id}`,
@@ -76,9 +75,9 @@ export const migrateExistingToTransactions = (store?: import('./datastore').Data
   if (settings) {
     // Seed full settings as an initial SETTINGS_UPDATED
     txs.push({
-      id: `tx-settings-initial-${formatDateISO(new Date())}`,
+      id: `tx-settings-initial-${formatDateISO(getCurrentDate())}`,
       type: TransactionType.SETTINGS_UPDATED,
-      timestamp: Date.now(),
+      timestamp: now(),
       settingsPatch: settings,
     } as Transaction);
   }
@@ -92,7 +91,7 @@ export const migrateExistingToTransactions = (store?: import('./datastore').Data
   // If settings present, compute historical daily budgets up to yesterday and seed DAILY_BUDGET_CREATED txs
   if (settings) {
     const stats = calculateStats(settings, entries);
-    const todayISO = formatDateISO(new Date());
+    const todayISO = formatDateISO(getCurrentDate());
     for (const date of Object.keys(stats)) {
       if (date < todayISO) {
         const s = stats[date]!;

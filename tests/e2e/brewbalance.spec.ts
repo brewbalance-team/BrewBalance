@@ -5,6 +5,84 @@ test.describe('BrewBalance App', () => {
     await page.goto('/');
   });
 
+  test('should enforce immutable historical budgets', async ({ page }) => {
+    // Set initial clock to Monday, February 9, 2026, 00:00:00 local time
+    const monday = new Date('2026-02-09T00:00:00');
+    const tuesday = new Date('2026-02-10T00:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time to Monday using the exposed clock API
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      } else {
+        throw new Error('Clock API not available - check if running in dev/test mode');
+      }
+    }, monday.getTime());
+
+    // Reload to ensure mocked time is applied on initial render
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Step 1: Set weekday budget to 300 yen
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Return to dashboard
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500); // Let state update
+
+    // Step 2: Record Monday's budget (should be 300)
+    const mondayBudget = await page.locator('[data-testid="dashboard-total-budget"]').textContent();
+    expect(mondayBudget).toContain('300');
+
+    // Step 3: Advance clock to Tuesday
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, tuesday.getTime());
+
+    // Reload to apply mocked date for the new day
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+    await page.waitForTimeout(500);
+
+    // Step 4: Check Tuesday's budget (should be 600: 300 rollover + 300 for today)
+    const tuesdayBudgetBefore = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    expect(tuesdayBudgetBefore).toContain('600');
+
+    // Step 5: Change weekday budget to 200
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '200');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Return to dashboard
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500);
+
+    // Step 6: Check Tuesday's budget (should be 500: 300 rollover from Monday + 200 for Tuesday)
+    // Monday's budget should NOT have changed
+    const tuesdayBudgetAfter = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    expect(tuesdayBudgetAfter).toContain('500');
+  });
+
   test('should load the dashboard', async ({ page }) => {
     // Wait for the app title to appear (more reliable than networkidle)
     await page.locator('[data-testid="app-title"]').waitFor();
