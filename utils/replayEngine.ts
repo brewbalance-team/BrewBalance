@@ -25,12 +25,14 @@ export const replay = (transactions?: Transaction[], throughDate?: string, store
   // Already sorted by transactionStore but ensure order
   txs.sort((a, b) => a.timestamp - b.timestamp);
 
+  const throughDateCutoff = throughDate ? new Date(`${throughDate}T23:59:59.999`).getTime() : null;
+
   let settings: Settings = { ...DEFAULT_SETTINGS } as Settings;
   const entries: Entry[] = [];
   const dailyBudgets: Record<string, { baseBudget: number; rollover: number }> = {};
 
   for (const tx of txs) {
-    if (throughDate && tx.timestamp > new Date(throughDate).getTime()) break;
+    if (throughDateCutoff !== null && tx.timestamp > throughDateCutoff) break;
 
     switch (tx.type) {
       case TransactionType.SETTINGS_UPDATED: {

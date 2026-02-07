@@ -83,6 +83,122 @@ test.describe('BrewBalance App', () => {
     expect(tuesdayBudgetAfter).toContain('500');
   });
 
+  test('should reduce today budget by daily budget delta', async ({ page }) => {
+    const monday = new Date('2026-02-09T00:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('300');
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '200');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('200');
+  });
+
+  test('should increase today budget by daily budget delta', async ({ page }) => {
+    const monday = new Date('2026-02-16T00:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('300');
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '400');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('400');
+  });
+
+  test('should not double today budget on repeated save', async ({ page }) => {
+    const monday = new Date('2026-02-23T00:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.evaluate(() => {
+      window.localStorage.clear();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.clearMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.clearMockTime();
+      }
+    });
+
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '1500');
+    await page.fill('[data-testid="settings-weekend-budget"]', '1500');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('1500');
+
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).toContainText('1500');
+    await expect(page.locator('[data-testid="dashboard-total-budget"]')).not.toContainText('3000');
+  });
+
   test('should load the dashboard', async ({ page }) => {
     // Wait for the app title to appear (more reliable than networkidle)
     await page.locator('[data-testid="app-title"]').waitFor();
