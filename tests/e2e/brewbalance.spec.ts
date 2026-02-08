@@ -297,4 +297,113 @@ test.describe('BrewBalance App', () => {
     await expect(page.locator('[data-testid="history-expenses-tab"]')).toBeVisible();
     await expect(page.locator('[data-testid="history-challenges-tab"]')).toBeVisible();
   });
+
+  test('should allow setting a custom base budget for a day', async ({ page }) => {
+    const testDate = new Date('2026-02-09T00:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time using the exposed clock API
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      } else {
+        throw new Error('Clock API not available - check if running in dev/test mode');
+      }
+    }, testDate.getTime());
+
+    // Reload to ensure mocked time is applied on initial render
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Navigate to settings to set default weekday budget
+    await page.locator('[data-testid="nav-settings"]').click();
+
+    // Set a default weekday budget
+    const defaultBudget = 300;
+    await page.fill('[data-testid="settings-weekday-budget"]', defaultBudget.toString());
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Return to dashboard
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500);
+
+    // Record the current daily budget from the dashboard
+    const dashboardBudgetBefore = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    // Extract numbers from the text (e.g., "¥300" -> 300)
+    const budgetBefore = parseInt((dashboardBudgetBefore || '0').replace(/[^\d]/g, ''), 10);
+    expect(budgetBefore).toBe(defaultBudget);
+
+    // Navigate to calendar view
+    await page.locator('[data-testid="nav-calendar"]').click();
+    await page.waitForTimeout(300);
+
+    // Click on today's cell (2026-02-09)
+    const todayDateStr = '2026-02-09';
+    const todayButton = page.locator(`[data-testid="calendar-day-${todayDateStr}"]`);
+    await expect(todayButton).toBeVisible();
+    await todayButton.click();
+
+    // Wait for the day detail modal to open
+    await page.locator('[data-testid="day-detail-modal"]').waitFor();
+
+    // Get the current base budget value from the input
+    const budgetInput = page.locator('[data-testid="day-detail-base-budget-input"]');
+
+    // Scroll input into view
+    await budgetInput.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+
+    // Wait for the input to have a value (it should be initialized with stats.baseBudget)
+    const currentBudgetValue = await budgetInput.inputValue();
+    if (!currentBudgetValue) {
+      throw new Error(
+        `Base budget input has no value. This suggests the modal state wasn't initialized properly.`,
+      );
+    }
+    const currentBudget = parseInt(currentBudgetValue, 10) || 0;
+
+    // Input custom base budget = original + 100
+    const customBudget = currentBudget + 100;
+
+    // Focus input and fill with new value
+    await budgetInput.focus();
+    await budgetInput.fill(customBudget.toString());
+
+    // Submit the form
+    await page.evaluate(() => {
+      const form = document.querySelector(
+        '[data-testid="day-detail-modal"] form',
+      ) as HTMLFormElement;
+      if (form) {
+        form.submit();
+      }
+    });
+
+    // Wait for the modal to close
+    await page.waitForTimeout(500);
+
+    // Reload the page to ensure persistence
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Navigate to dashboard
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500);
+
+    // Assert that today's budget now reflects the change
+    const dashboardBudgetAfter = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    const budgetAfter = parseInt((dashboardBudgetAfter || '0').replace(/[^\d]/g, ''), 10);
+    expect(budgetAfter).toBe(customBudget);
+  });
 });

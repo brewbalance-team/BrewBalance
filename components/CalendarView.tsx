@@ -164,6 +164,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
                 onClick={() => handleDayClick(dateStr)}
                 disabled={!hasStats}
                 className={`aspect-square rounded-2xl border flex flex-col items-center justify-center p-0.5 relative transition-all active:scale-95 ${statusClass} ${isToday ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900 z-10' : ''}`}
+                {...testId(`calendar-day-${dateStr}`)}
               >
                 <div className="flex items-start gap-0.5">
                   <span
@@ -202,6 +203,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
       </div>
 
       <DayDetailModal
+        key={selectedDayStats?.date}
         isOpen={!!selectedDayStats}
         onClose={() => setSelectedDayStats(null)}
         stats={selectedDayStats}

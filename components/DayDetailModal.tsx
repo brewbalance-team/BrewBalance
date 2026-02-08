@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X, Save, RotateCcw, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { DailyStats } from '../types';
+import { testId } from '../utils/testUtils';
 
 interface DayDetailModalProps {
   isOpen: boolean;
@@ -27,26 +28,30 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   const [budget, setBudget] = useState(stats?.baseBudget.toString() || '');
   const [rollover, setRollover] = useState(stats?.rollover.toString() || '');
 
+  const handleSave = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!stats) return;
+
+      let changed = false;
+      const valBudget = parseFloat(budget);
+      if (!isNaN(valBudget)) {
+        onSaveBudget(stats.date, valBudget);
+        changed = true;
+      }
+
+      const valRollover = parseFloat(rollover);
+      if (!isNaN(valRollover) && valRollover !== stats.rollover) {
+        onSaveRollover(stats.date, valRollover);
+        changed = true;
+      }
+
+      if (changed) onClose();
+    },
+    [budget, rollover, stats, onSaveBudget, onSaveRollover, onClose],
+  );
+
   if (!isOpen || !stats) return null;
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let changed = false;
-    const valBudget = parseFloat(budget);
-    if (!isNaN(valBudget)) {
-      onSaveBudget(stats.date, valBudget);
-      changed = true;
-    }
-
-    const valRollover = parseFloat(rollover);
-    if (!isNaN(valRollover) && valRollover !== stats.rollover) {
-      onSaveRollover(stats.date, valRollover);
-      changed = true;
-    }
-
-    if (changed) onClose();
-  };
 
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(',', '.');
@@ -84,7 +89,10 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all animate-in fade-in duration-200">
-      <div className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div
+        className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0 max-h-[90vh] overflow-y-auto custom-scrollbar"
+        {...testId('day-detail-modal')}
+      >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-white">Day Details</h3>
           <button
@@ -189,6 +197,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                 onChange={handleBudgetChange}
                 className={`w-full p-4 bg-slate-950 rounded-2xl border-2 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700 ${stats.isCustomBudget ? 'border-amber-500/50' : 'border-slate-800'}`}
                 placeholder="0"
+                {...testId('day-detail-base-budget-input')}
               />
               <span className="absolute right-4 top-4 text-slate-600 font-medium pointer-events-none">
                 {currency}
@@ -199,6 +208,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
           <button
             type="submit"
             className="w-full py-4 bg-amber-500 text-slate-900 font-bold rounded-2xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 active:scale-95"
+            {...testId('day-detail-save-button')}
           >
             <Save size={18} /> Update Details
           </button>

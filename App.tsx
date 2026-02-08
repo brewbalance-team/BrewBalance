@@ -305,7 +305,14 @@ const App: React.FC = () => {
             />
           )}
           {currentTab === 'calendar' && (
-            <CalendarView statsMap={statsMap} settings={settings} onUpdateSettings={setSettings} />
+            <CalendarView
+              statsMap={statsMap}
+              settings={settings}
+              onUpdateSettings={(newSettings) => {
+                appendTransaction(makeSettingsUpdatedTx(newSettings));
+                setSettings(newSettings);
+              }}
+            />
           )}
           {currentTab === 'settings' && (
             <SettingsView
