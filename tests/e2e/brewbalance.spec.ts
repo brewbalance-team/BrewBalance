@@ -299,23 +299,26 @@ test.describe('BrewBalance App', () => {
   });
 
   test('should allow setting a custom base budget for a day', async ({ page }) => {
+    // NOTE: This test captures a known bug where the custom base budget does not persist.
     const testDate = new Date('2026-02-09T00:00:00');
 
     await page.goto('/');
     await page.locator('[data-testid="app-title"]').waitFor();
 
-    // Set mock time using the exposed clock API
-    await page.evaluate((time: number) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const clock = (window as any).__brewBalanceClock;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (clock?.setMockTime) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        clock.setMockTime(time);
-      } else {
-        throw new Error('Clock API not available - check if running in dev/test mode');
+    // Set mock time via window.__brewBalanceClock
+    const success = await page.evaluate((time: number) => {
+      const w = window as unknown as Record<string, unknown>;
+      const clock = w['__brewBalanceClock'] as Record<string, unknown> | undefined;
+      if (clock && typeof clock['setMockTime'] === 'function') {
+        (clock['setMockTime'] as (t: number) => void)(time);
+        return true;
       }
+      return false;
     }, testDate.getTime());
+
+    if (!success) {
+      throw new Error('Failed to set mock time');
+    }
 
     // Reload to ensure mocked time is applied on initial render
     await page.reload();
@@ -365,9 +368,7 @@ test.describe('BrewBalance App', () => {
     // Wait for the input to have a value (it should be initialized with stats.baseBudget)
     const currentBudgetValue = await budgetInput.inputValue();
     if (!currentBudgetValue) {
-      throw new Error(
-        `Base budget input has no value. This suggests the modal state wasn't initialized properly.`,
-      );
+      throw new Error('Base budget input has no value');
     }
     const currentBudget = parseInt(currentBudgetValue, 10) || 0;
 
@@ -377,19 +378,20 @@ test.describe('BrewBalance App', () => {
     // Focus input and fill with new value
     await budgetInput.focus();
     await budgetInput.fill(customBudget.toString());
+    await budgetInput.blur(); // Trigger onChange handlers
+    await page.waitForTimeout(200);
 
-    // Submit the form
+    // Submit the form by calling requestSubmit on the form element
+    // This avoids navigation bar interception issues
     await page.evaluate(() => {
-      const form = document.querySelector(
-        '[data-testid="day-detail-modal"] form',
-      ) as HTMLFormElement;
-      if (form) {
-        form.submit();
+      const form = document.querySelector('[data-testid="day-detail-modal"] form');
+      if (form && form instanceof HTMLFormElement) {
+        form.requestSubmit();
       }
     });
 
     // Wait for the modal to close
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     // Reload the page to ensure persistence
     await page.reload();
