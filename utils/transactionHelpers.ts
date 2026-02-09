@@ -15,7 +15,7 @@ export const makeEntryAddedTx = (entry: Entry): Transaction => ({
 });
 
 export const makeSettingsUpdatedTx = (settings: Partial<Settings>): Transaction => ({
-  id: `tx-settings-${now()}`,
+  id: `tx-settings-${crypto.randomUUID()}`,
   type: TransactionType.SETTINGS_UPDATED,
   timestamp: now(),
   settingsPatch: settings,
@@ -35,7 +35,7 @@ export const makeDailyBudgetCreatedTx = (
 });
 
 export const makeCustomRolloverTx = (date: string, rollover: number): Transaction => ({
-  id: `tx-roll-${date}-${now()}`,
+  id: `tx-roll-${date}-${crypto.randomUUID()}`,
   type: TransactionType.CUSTOM_ROLLOVER_SET,
   timestamp: now(),
   date,

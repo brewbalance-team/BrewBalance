@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { X, Save, RotateCcw, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { DailyStats } from '../types';
@@ -27,6 +27,17 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
 }) => {
   const [budget, setBudget] = useState(stats?.baseBudget.toString() || '');
   const [rollover, setRollover] = useState(stats?.rollover.toString() || '');
+
+  // Re-initialize state when a different day is selected
+  useEffect(() => {
+    // Update budget and rollover when date changes
+    // Dependent on stats.baseBudget and stats.rollover but using only stats.date
+    // in dependency array to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setBudget((stats?.baseBudget ?? 0).toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setRollover((stats?.rollover ?? 0).toString());
+  }, [stats?.date]); // Re-initialize only when the date changes
 
   const handleSave = useCallback(
     (e: React.FormEvent) => {
