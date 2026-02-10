@@ -309,6 +309,40 @@ const App: React.FC = () => {
               statsMap={statsMap}
               settings={settings}
               onUpdateSettings={(newSettings) => {
+                // Detect custom budget changes for dates with locked budgets
+                // and issue rollover adjustments to persist the change in the ledger
+                const oldCustomBudgets = settings.customBudgets || {};
+                const newCustomBudgets = newSettings.customBudgets || {};
+
+                for (const date of Object.keys(newCustomBudgets)) {
+                  if (newCustomBudgets[date] !== oldCustomBudgets[date]) {
+                    const lockedBudget = dailyBudgets[date];
+                    if (lockedBudget) {
+                      const newBase = newCustomBudgets[date]!;
+                      const delta = newBase - lockedBudget.baseBudget;
+                      if (delta !== 0) {
+                        appendTransaction(
+                          makeCustomRolloverTx(date, lockedBudget.rollover + delta),
+                        );
+                      }
+                    }
+                  }
+                }
+
+                // Detect custom rollover changes for dates with locked budgets
+                // and issue rollover transactions to persist the change
+                const oldCustomRollovers = settings.customRollovers || {};
+                const newCustomRollovers = newSettings.customRollovers || {};
+
+                for (const date of Object.keys(newCustomRollovers)) {
+                  if (newCustomRollovers[date] !== oldCustomRollovers[date]) {
+                    const lockedBudget = dailyBudgets[date];
+                    if (lockedBudget) {
+                      appendTransaction(makeCustomRolloverTx(date, newCustomRollovers[date]!));
+                    }
+                  }
+                }
+
                 appendTransaction(makeSettingsUpdatedTx(newSettings));
                 setSettings(newSettings);
               }}
