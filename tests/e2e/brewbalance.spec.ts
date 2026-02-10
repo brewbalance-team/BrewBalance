@@ -408,4 +408,112 @@ test.describe('BrewBalance App', () => {
     const budgetAfter = parseInt((dashboardBudgetAfter || '0').replace(/[^\d]/g, ''), 10);
     expect(budgetAfter).toBe(customBudget);
   });
+
+  test('should use overridden base budget for future day when calculating next day budget', async ({
+    page,
+  }) => {
+    // Set initial clock to Monday, February 9, 2026, 00:00:00 local time
+    const monday = new Date('2026-02-09T00:00:00');
+    const tuesday = new Date('2026-02-10T00:00:00');
+    const baseBudgetFromSettings = 300;
+    const customBudgetForTuesday = baseBudgetFromSettings + 100; // 400
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time to Monday using the exposed clock API
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      } else {
+        throw new Error('Clock API not available');
+      }
+    }, monday.getTime());
+
+    // Reload to ensure mocked time is applied on initial render
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Step 1: Configure base budget in settings
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', baseBudgetFromSettings.toString());
+    await page.fill('[data-testid="settings-weekend-budget"]', baseBudgetFromSettings.toString());
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Step 2: Return to dashboard and verify Monday's budget
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500);
+    const mondayBudgetText = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    const mondayBudget = parseInt((mondayBudgetText || '0').replace(/[^\d]/g, ''), 10);
+    expect(mondayBudget).toBe(baseBudgetFromSettings);
+
+    // Step 3: Navigate to calendar view
+    await page.locator('[data-testid="nav-calendar"]').click();
+    await page.waitForTimeout(300);
+
+    // Step 4: Select Tuesday (Feb 10) - 1 day in the future
+    const tuesdayDateStr = '2026-02-10';
+    const tuesdayButton = page.locator(`[data-testid="calendar-day-${tuesdayDateStr}"]`);
+    await expect(tuesdayButton).toBeVisible();
+    await tuesdayButton.click();
+
+    // Step 5: Wait for day detail modal and set custom base budget
+    await page.locator('[data-testid="day-detail-modal"]').waitFor();
+    const budgetInput = page.locator('[data-testid="day-detail-base-budget-input"]');
+    await budgetInput.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+
+    // Fill with custom budget (base + 100)
+    await budgetInput.focus();
+    await budgetInput.fill(customBudgetForTuesday.toString());
+    await budgetInput.blur();
+    await page.waitForTimeout(200);
+
+    // Step 6: Submit the form
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="day-detail-modal"] form');
+      if (form && form instanceof HTMLFormElement) {
+        form.requestSubmit();
+      }
+    });
+
+    // Wait for the modal to close
+    await page.waitForTimeout(1000);
+
+    // Step 7: Advance clock by 1 day to Tuesday
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, tuesday.getTime());
+
+    // Reload to apply the new clock time
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+    await page.waitForTimeout(500);
+
+    // Step 8: Navigate to dashboard to verify the budget calculation
+    await page.locator('[data-testid="nav-dashboard"]').click();
+    await page.waitForTimeout(500);
+
+    // Step 9: Verify that Tuesday's budget uses the overridden base budget
+    // Expected: Monday's budget (300) + Tuesday's custom base budget (400) = 700
+    // NOT: Monday's budget (300) + default weekday budget from settings (300) = 600
+    const tuesdayBudgetText = await page
+      .locator('[data-testid="dashboard-total-budget"]')
+      .textContent();
+    const tuesdayBudget = parseInt((tuesdayBudgetText || '0').replace(/[^\d]/g, ''), 10);
+    const expectedBudget = baseBudgetFromSettings + customBudgetForTuesday;
+    expect(tuesdayBudget).toBe(expectedBudget);
+  });
 });
