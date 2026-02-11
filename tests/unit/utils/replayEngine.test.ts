@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { replay, ensureDailyBudgetForDate, materializeUpTo } from '../../../utils/replayEngine';
-import { appendTransaction, clearTransactions } from '../../../utils/transactionStore';
-import { setDefaultDataStore, InMemoryDataStore } from '../../../utils/datastore';
-import { Transaction, TransactionType } from '../../../types';
+import { replay, ensureDailyBudgetForDate, materializeUpTo } from '../../../src/utils/replayEngine';
+import { appendTransaction, clearTransactions } from '../../../src/utils/transactionStore';
+import { setDefaultDataStore, InMemoryDataStore } from '../../../src/utils/datastore';
+import { Transaction, TransactionType } from '../../../src/types';
 
 let store: InMemoryDataStore;
 beforeEach(() => {
