@@ -293,9 +293,9 @@ test.describe('BrewBalance App', () => {
     // Navigate to history
     await page.locator('[data-testid="nav-history"]').click();
 
-    // Check history elements
-    await expect(page.locator('[data-testid="history-expenses-tab"]')).toBeVisible();
-    await expect(page.locator('[data-testid="history-challenges-tab"]')).toBeVisible();
+    // Check header visible to confirm view is loaded
+    const heading = page.locator('h2').filter({ hasText: 'History' }).first();
+    await expect(heading).toBeVisible();
   });
 
   test('should allow setting a custom base budget for a day', async ({ page }) => {

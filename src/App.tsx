@@ -13,7 +13,7 @@ import { now, getCurrentDate } from './utils/clock';
 import { replay, ensureDailyBudgetForDate, materializeUpTo } from './utils/replayEngine';
 import { makeCustomRolloverTx, makeSettingsUpdatedTx } from './utils/transactionHelpers';
 import { migrateFromLegacyModel } from './utils/migration';
-import { appendTransaction, clearTransactions } from './utils/transactionStore';
+import { appendTransaction, clearTransactions, loadTransactions } from './utils/transactionStore';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import SettingsView from './components/Settings';
@@ -38,6 +38,9 @@ const App: React.FC = () => {
     const { entries: replayedEntries } = replay();
     return replayedEntries || [];
   });
+
+  // Load transactions for history view
+  const [transactions] = useState(() => loadTransactions());
 
   const [currentTab, setCurrentTab] = useState<TabView>('dashboard');
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
@@ -298,6 +301,7 @@ const App: React.FC = () => {
           )}
           {currentTab === 'history' && (
             <HistoryView
+              transactions={transactions}
               entries={entries}
               settings={settings}
               dailyBudgets={dailyBudgets}
