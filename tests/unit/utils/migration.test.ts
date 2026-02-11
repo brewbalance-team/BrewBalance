@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { migrateFromLegacyModel, isMigrated } from '../../../utils/migration';
-import { replay } from '../../../utils/replayEngine';
-import { clearTransactions, loadTransactions } from '../../../utils/transactionStore';
-import { setDefaultDataStore, InMemoryDataStore } from '../../../utils/datastore';
-import { STORAGE_KEYS } from '../../../constants';
-import { Entry, Settings, TransactionType } from '../../../types';
+import { migrateFromLegacyModel, isMigrated } from '../../../src/utils/migration';
+import { replay } from '../../../src/utils/replayEngine';
+import { clearTransactions, loadTransactions } from '../../../src/utils/transactionStore';
+import { setDefaultDataStore, InMemoryDataStore } from '../../../src/utils/datastore';
+import { STORAGE_KEYS } from '../../../src/constants';
+import { Entry, Settings, TransactionType } from '../../../src/types';
 
 let store: InMemoryDataStore;
 

@@ -13,7 +13,7 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
     "alwaysStrict": true,
     "noImplicitAny": true,

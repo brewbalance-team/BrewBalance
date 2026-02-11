@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { migrateExistingToTransactions } from '../../../utils/transactionHelpers';
-import { loadTransactions, clearTransactions } from '../../../utils/transactionStore';
-import { Transaction, TransactionType } from '../../../types';
-import { STORAGE_KEYS } from '../../../constants';
-import { setDefaultDataStore, InMemoryDataStore } from '../../../utils/datastore';
+import { migrateExistingToTransactions } from '../../../src/utils/transactionHelpers';
+import { loadTransactions, clearTransactions } from '../../../src/utils/transactionStore';
+import { Transaction, TransactionType } from '../../../src/types';
+import { STORAGE_KEYS } from '../../../src/constants';
+import { setDefaultDataStore, InMemoryDataStore } from '../../../src/utils/datastore';
 
 let store: InMemoryDataStore;
 beforeEach(() => {
