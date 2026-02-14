@@ -516,4 +516,333 @@ test.describe('BrewBalance App', () => {
     const expectedBudget = baseBudgetFromSettings + customBudgetForTuesday;
     expect(tuesdayBudget).toBe(expectedBudget);
   });
+
+  test('should display expenses in temporal order (newest first) with timestamps', async ({
+    page,
+  }) => {
+    // Set initial clock to Monday, February 9, 2026
+    const monday = new Date('2026-02-09T10:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time to Monday
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    // Reload with mocked time
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set up settings
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Add multiple expenses on the same day
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.waitForTimeout(300);
+
+    // Add first expense at 10:00
+    await page.fill('[data-testid="expense-amount-input"]', '50');
+    await page.fill('[data-testid="expense-note-input"]', 'First coffee');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate back to add screen
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.waitForTimeout(300);
+
+    // Add second expense at later time (advance mock time by 1 hour to 11:00)
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, new Date('2026-02-09T11:00:00').getTime());
+
+    await page.fill('[data-testid="expense-amount-input"]', '75');
+    await page.fill('[data-testid="expense-note-input"]', 'Lunch');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate back to add screen
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.waitForTimeout(300);
+
+    // Add third expense at 12:00
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, new Date('2026-02-09T12:00:00').getTime());
+
+    await page.fill('[data-testid="expense-amount-input"]', '100');
+    await page.fill('[data-testid="expense-note-input"]', 'Dinner');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate to history view
+    await page.locator('[data-testid="nav-history"]').click();
+    await page.waitForTimeout(300);
+
+    // Verify expenses tab is selected
+    await expect(page.locator('[data-testid="history-expenses-tab"]')).toBeVisible();
+
+    // Get all expense entries
+    const entries = await page.evaluate(() => {
+      const buttons = document.querySelectorAll('[data-testid="ledger-item"]');
+      return Array.from(buttons).map((item) => {
+        const element = item as HTMLElement;
+        const noteElement = element.querySelector('div[class*="font-bold"]');
+        const timeElement = element.querySelector('div[class*="text-xs"]');
+        const amountElement = element.querySelector('div[class*="text-lg"]');
+        return {
+          note: noteElement?.textContent || '',
+          time: timeElement?.textContent || '',
+          amount: amountElement?.textContent || '',
+        };
+      });
+    });
+
+    // Filter to only human-initiated expenses (those with note text containing actual expense names, not system messages)
+    const expenseEntries = entries.filter(
+      (e) =>
+        e.note &&
+        !e.note.includes('created') &&
+        !e.note.includes('adjusted') &&
+        ['Dinner', 'Lunch', 'First coffee'].includes(e.note),
+    );
+
+    // Verify entries are in reverse chronological order (newest first: Dinner, Lunch, First coffee)
+    expect(expenseEntries.length).toBe(3);
+    expect(expenseEntries[0]?.note).toBe('Dinner'); // 12:00
+    expect(expenseEntries[1]?.note).toBe('Lunch'); // 11:00
+    expect(expenseEntries[2]?.note).toBe('First coffee'); // 10:00
+
+    // Verify timestamps are present
+    expect(expenseEntries[0]?.time).toMatch(/\d{2}:\d{2}/); // Format HH:MM
+    expect(expenseEntries[1]?.time).toMatch(/\d{2}:\d{2}/);
+    expect(expenseEntries[2]?.time).toMatch(/\d{2}:\d{2}/);
+  });
+
+  test('should exclude future-dated transactions from the ledger', async ({ page }) => {
+    // Set initial clock to Monday, February 9, 2026
+    const monday = new Date('2026-02-09T10:00:00');
+    const tuesday = new Date('2026-02-10T10:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time to Monday
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    // Reload with mocked time
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set up settings
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Add expenses directly via localStorage to avoid UI form issues with multiple entries
+    await page.evaluate(() => {
+      // Clear transactions to allow migration to run with new entries
+      localStorage.removeItem('brewbalance_transactions');
+      const entries = [
+        {
+          id: 'entry-1',
+          date: '2026-02-09',
+          amount: 50,
+          note: 'Monday expense',
+          timestamp: new Date('2026-02-09T10:00:00').getTime(),
+        },
+        {
+          id: 'entry-2',
+          date: '2026-02-10',
+          amount: 75,
+          note: 'Tuesday expense',
+          timestamp: new Date('2026-02-10T10:00:00').getTime(),
+        },
+      ];
+      localStorage.setItem('brewbalance_entries', JSON.stringify(entries));
+    });
+
+    // Reload to apply the entries
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+    await page.waitForTimeout(300);
+
+    // Navigate to history view (still on Monday)
+    await page.locator('[data-testid="nav-history"]').click();
+    await page.waitForTimeout(300);
+
+    // Get all visible expense entries
+    const entries = await page.evaluate(() => {
+      const buttons = document.querySelectorAll('[data-testid="ledger-item"]');
+      return Array.from(buttons).map((item) => {
+        const element = item as HTMLElement;
+        const noteElement = element.querySelector('div[class*="font-bold"]');
+        return {
+          note: noteElement?.textContent || '',
+        };
+      });
+    });
+
+    // Verify only Monday's expense is shown, not Tuesday's
+    const noteTexts = entries.map((e) => e.note).filter((note) => note.includes('expense'));
+    expect(noteTexts).toContain('Monday expense');
+    expect(noteTexts).not.toContain('Tuesday expense');
+
+    // Now advance the clock to Tuesday (making Tuesday the "today")
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, tuesday.getTime());
+
+    // Reload to apply the new date
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+    await page.waitForTimeout(300);
+
+    // Navigate to history view
+    await page.locator('[data-testid="nav-history"]').click();
+    await page.waitForTimeout(300);
+
+    // Get all visible expense entries after advancing the date
+    const entriesAfter = await page.evaluate(() => {
+      const buttons = document.querySelectorAll('[data-testid="ledger-item"]');
+      return Array.from(buttons).map((item) => {
+        const element = item as HTMLElement;
+        const noteElement = element.querySelector('div[class*="font-bold"]');
+        return {
+          note: noteElement?.textContent || '',
+        };
+      });
+    });
+
+    // Now both Monday and Tuesday expenses should be showing (both are current/past)
+    const noteTextsAfter = entriesAfter
+      .map((e) => e.note)
+      .filter((note) => note.includes('expense'));
+    expect(noteTextsAfter).toContain('Monday expense');
+    expect(noteTextsAfter).toContain('Tuesday expense');
+  });
+
+  test('should display all relevant transactions as a ledger of budget impacts', async ({
+    page,
+  }) => {
+    // This test verifies that the expenses view displays a ledger showing all events
+    // that impact the user's budget, presented as a clear list
+
+    const monday = new Date('2026-02-09T10:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time to Monday
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, monday.getTime());
+
+    // Reload with mocked time
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set up initial settings
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Add some expenses to establish a ledger
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.waitForTimeout(300);
+
+    // Add multiple expenses
+    await page.fill('[data-testid="expense-amount-input"]', '50');
+    await page.fill('[data-testid="expense-note-input"]', 'Coffee');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate back to add screen
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.waitForTimeout(300);
+
+    await page.fill('[data-testid="expense-amount-input"]', '100');
+    await page.fill('[data-testid="expense-note-input"]', 'Lunch');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate to history and verify entries exist
+    await page.locator('[data-testid="nav-history"]').click();
+    await page.waitForTimeout(300);
+
+    // Verify history view displays the expense ledger
+    const expenseTab = page.locator('[data-testid="history-expenses-tab"]');
+    await expect(expenseTab).toBeVisible();
+
+    const entries = await page.evaluate(() => {
+      const buttons = document.querySelectorAll('[data-testid="ledger-item"]');
+      return Array.from(buttons).map((item) => {
+        const element = item as HTMLElement;
+        const noteElement = element.querySelector('div[class*="font-bold"]');
+        const amountElement = element.querySelector('div[class*="text-lg"]');
+        return {
+          note: noteElement?.textContent || '',
+          amount: amountElement?.textContent || '',
+        };
+      });
+    });
+
+    // Verify the ledger contains the expected transactions
+    expect(entries.length).toBeGreaterThanOrEqual(2);
+    const notes = entries
+      .map((e) => e.note)
+      .filter((note) => note === 'Coffee' || note === 'Lunch');
+    expect(notes).toContain('Coffee');
+    expect(notes).toContain('Lunch');
+
+    // Verify amounts are displayed (indicating decrease in budget)
+    const coffeeEntry = entries.find((e) => e.note === 'Coffee');
+    const lunchEntry = entries.find((e) => e.note === 'Lunch');
+    expect(coffeeEntry?.amount).toMatch(/\d+/); // Should contain a number
+    expect(lunchEntry?.amount).toMatch(/\d+/);
+  });
 });

@@ -302,6 +302,7 @@ const App: React.FC = () => {
               settings={settings}
               dailyBudgets={dailyBudgets}
               onEditEntry={(entry) => setEditingEntry(entry)}
+              transactions={replay().transactions}
             />
           )}
           {currentTab === 'calendar' && (
@@ -322,7 +323,12 @@ const App: React.FC = () => {
                       const delta = newBase - lockedBudget.baseBudget;
                       if (delta !== 0) {
                         appendTransaction(
-                          makeCustomRolloverTx(date, lockedBudget.rollover + delta),
+                          makeCustomRolloverTx(
+                            date,
+                            lockedBudget.rollover, // Keep rollover unchanged
+                            delta,
+                            'base budget change',
+                          ),
                         );
                       }
                     }
@@ -338,7 +344,17 @@ const App: React.FC = () => {
                   if (newCustomRollovers[date] !== oldCustomRollovers[date]) {
                     const lockedBudget = dailyBudgets[date];
                     if (lockedBudget) {
-                      appendTransaction(makeCustomRolloverTx(date, newCustomRollovers[date]!));
+                      const delta =
+                        newCustomRollovers[date]! -
+                        (oldCustomRollovers[date] ?? lockedBudget.rollover);
+                      appendTransaction(
+                        makeCustomRolloverTx(
+                          date,
+                          newCustomRollovers[date]!,
+                          delta,
+                          'manual rollover adjustment',
+                        ),
+                      );
                     }
                   }
                 }
@@ -366,7 +382,14 @@ const App: React.FC = () => {
                   const delta = newBase - existingBudget.baseBudget;
                   appendTransaction(makeSettingsUpdatedTx(newSettings));
                   if (delta !== 0) {
-                    appendTransaction(makeCustomRolloverTx(today, existingBudget.rollover + delta));
+                    appendTransaction(
+                      makeCustomRolloverTx(
+                        today,
+                        existingBudget.rollover, // Keep rollover unchanged
+                        delta,
+                        'base budget change',
+                      ),
+                    );
                   }
                 } else {
                   appendTransaction(makeSettingsUpdatedTx(newSettings));

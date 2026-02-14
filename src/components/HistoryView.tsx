@@ -13,9 +13,10 @@ import {
   Percent,
   DollarSign,
   Wallet,
+  Zap,
 } from 'lucide-react';
 
-import { Entry, Settings } from '../types';
+import { Entry, Settings, Transaction, TransactionType } from '../types';
 import {
   calculateChallengeTotalBudget,
   isChallengeFailed,
@@ -29,6 +30,7 @@ interface HistoryViewProps {
   settings: Settings;
   dailyBudgets: Record<string, { baseBudget: number; rollover: number }>;
   onEditEntry: (entry: Entry) => void;
+  transactions: Transaction[];
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({
@@ -36,29 +38,127 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   settings,
   dailyBudgets,
   onEditEntry,
+  transactions,
 }) => {
   const [viewMode, setViewMode] = useState<'expenses' | 'challenges'>('expenses');
   const currency =
     settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
   const todayISO = getTodayISO();
 
-  // Group entries by date
-  const groupedEntries = useMemo(() => {
-    const groups: Record<string, Entry[]> = {};
-    const sorted = [...entries].sort((a, b) => b.timestamp - a.timestamp);
+  // Convert transactions into displayable ledger items
+  interface LedgerItem {
+    id: string;
+    timestamp: number;
+    date: string;
+    type: TransactionType;
+    description: string;
+    amount: number;
+    isIncrease: boolean;
+    isHumanInitiated: boolean;
+    icon: React.ReactNode;
+    transaction: Transaction;
+  }
 
-    sorted.forEach((entry) => {
-      if (!groups[entry.date]) {
-        groups[entry.date] = [];
+  const ledgerItems = useMemo(() => {
+    const items: LedgerItem[] = [];
+
+    for (const tx of transactions) {
+      // Only include transactions from current date and older
+      let txDate = '';
+      let txDescription = '';
+      let txAmount = 0;
+      let isIncrease = false;
+      let isHumanInitiated = false;
+
+      switch (tx.type) {
+        case TransactionType.ENTRY_ADDED: {
+          const entryTx = tx as unknown as { entry: Entry };
+          const entry = entryTx.entry;
+          txDate = entry.date;
+          txDescription = entry.note;
+          txAmount = entry.amount;
+          isIncrease = false; // Expense decreases budget
+          isHumanInitiated = true;
+          break;
+        }
+
+        case TransactionType.DAILY_BUDGET_CREATED: {
+          const budgetTx = tx as unknown as { date: string; baseBudget: number };
+          txDate = budgetTx.date;
+          txDescription = `Daily budget created`;
+          txAmount = budgetTx.baseBudget;
+          isIncrease = true; // Daily budget increases available funds
+          isHumanInitiated = false;
+          break;
+        }
+
+        case TransactionType.CUSTOM_ROLLOVER_SET: {
+          const rolloverTx = tx as unknown as {
+            date: string;
+            rollover: number;
+            delta: number;
+            reason?: string;
+          };
+          txDate = rolloverTx.date;
+          txDescription = rolloverTx.reason || 'Rollover adjusted';
+          txAmount = Math.abs(rolloverTx.delta || rolloverTx.rollover); // Use delta if available, fallback to rollover for old transactions
+          isIncrease =
+            (rolloverTx.delta !== undefined ? rolloverTx.delta : rolloverTx.rollover) > 0; // Rollovers can increase or decrease
+          isHumanInitiated = true; // User set custom rollover
+          break;
+        }
+
+        case TransactionType.SETTINGS_UPDATED: {
+          // Skip settings updates - the actual budget impact is captured
+          // in rollover adjustment transactions (CUSTOM_ROLLOVER_SET)
+          continue;
+        }
+
+        case TransactionType.CHALLENGE_CREATED:
+        case TransactionType.CHALLENGE_ARCHIVED: {
+          // Skip challenges - they're displayed in their own view
+          continue;
+        }
+
+        default:
+          continue;
       }
-      groups[entry.date]!.push(entry);
-    });
-    return groups;
-  }, [entries]);
 
-  const dates = Object.keys(groupedEntries).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
-  );
+      // Filter: only include transactions from current date and older
+      if (txDate <= todayISO) {
+        items.push({
+          id: tx.id,
+          timestamp: tx.timestamp,
+          date: txDate,
+          type: tx.type,
+          description: txDescription,
+          amount: txAmount,
+          isIncrease,
+          isHumanInitiated,
+          icon: null, // Assign below
+          transaction: tx,
+        });
+      }
+    }
+
+    // Sort by timestamp descending (newest first)
+    items.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Assign icons
+    return items.map((item) => {
+      let icon: React.ReactNode;
+      if (item.type === TransactionType.ENTRY_ADDED) {
+        icon = <TrendingUp size={18} />;
+      } else if (item.type === TransactionType.DAILY_BUDGET_CREATED) {
+        icon = <Zap size={18} />;
+      } else if (item.type === TransactionType.CUSTOM_ROLLOVER_SET) {
+        icon = <TrendingUp size={18} />;
+      } else {
+        icon = <Info size={18} />;
+      }
+      return { ...item, icon };
+    });
+  }, [transactions, todayISO]);
 
   // Calculate needed stats to check failure for active challenge
   const activeChallengeStatus = useMemo(() => {
@@ -114,63 +214,83 @@ const HistoryView: React.FC<HistoryViewProps> = ({
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
         {viewMode === 'expenses' ? (
-          <div className="space-y-6">
-            {dates.length === 0 ? (
+          <div className="space-y-3">
+            {ledgerItems.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-slate-500 gap-4">
                 <div className="p-5 bg-slate-900 rounded-full border border-slate-800">
                   <Info size={32} />
                 </div>
-                <p className="text-base font-medium">No expenses recorded yet</p>
+                <p className="text-base font-medium">No transactions recorded yet</p>
               </div>
             ) : (
-              dates.map((date) => (
-                <div key={date} className="space-y-3">
-                  <div className="flex items-center gap-3 px-1">
-                    <span className="text-xs font-black text-slate-500 uppercase tracking-wider bg-slate-900 px-2 py-1 rounded-md border border-slate-800">
-                      {new Date(date).toLocaleDateString(undefined, {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                    <div className="h-px bg-slate-800 flex-1"></div>
-                  </div>
+              ledgerItems.map((item) => {
+                // Determine colors based on transaction type and direction
+                const bgColor = item.isHumanInitiated ? 'bg-slate-900' : 'bg-slate-800/50';
+                const borderColor = item.isHumanInitiated
+                  ? 'border-slate-700'
+                  : 'border-slate-700/50';
+                const amountColor = item.isIncrease ? 'text-emerald-400' : 'text-red-400';
+                const iconBgColor = item.isIncrease
+                  ? 'bg-emerald-950/30 text-emerald-500 border-emerald-900/30'
+                  : 'bg-red-950/30 text-red-500 border-red-900/30';
+                const typeLabel = item.isHumanInitiated ? 'Human' : 'System';
+                const typeLabelColor = item.isHumanInitiated ? 'text-blue-400' : 'text-amber-400';
 
-                  <div className="space-y-3">
-                    {groupedEntries[date]!.map((entry) => (
-                      <button
-                        key={entry.id}
-                        onClick={() => onEditEntry(entry)}
-                        className="w-full flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm hover:bg-slate-800/50 transition-colors group text-left"
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      // Only allow editing of human-initiated ENTRY_ADDED transactions
+                      if (item.type === TransactionType.ENTRY_ADDED && item.isHumanInitiated) {
+                        const entryTx = item.transaction as unknown as {
+                          entry: Entry;
+                        };
+                        onEditEntry(entryTx.entry);
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between p-4 ${bgColor} rounded-2xl border ${borderColor} shadow-sm hover:bg-slate-800/50 transition-colors group text-left`}
+                    {...testId('ledger-item')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-xl ${iconBgColor} flex items-center justify-center border group-hover:scale-110 transition-transform`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-amber-950/30 flex items-center justify-center text-amber-500 border border-amber-900/30 group-hover:scale-110 transition-transform">
-                            <TrendingUp size={18} />
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-200 group-hover:text-white transition-colors">
-                              {entry.note}
-                            </div>
-                            <div className="text-xs text-slate-500 font-medium">
-                              {new Date(entry.timestamp).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </div>
-                          </div>
+                        {item.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-slate-200 group-hover:text-white transition-colors">
+                          {item.description}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="font-black text-white text-lg">
-                            -{currency}
-                            {entry.amount}
-                          </div>
+                        <div className="text-xs text-slate-500 font-medium space-x-2">
+                          <span>
+                            {new Date(item.timestamp).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${typeLabelColor}`}
+                          >
+                            {typeLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {item.amount > 0 && (
+                      <div className={`flex items-center gap-3 ${amountColor}`}>
+                        <div className="font-black text-lg">
+                          {item.isIncrease ? '+' : '-'}
+                          {currency}
+                          {item.amount}
+                        </div>
+                        {item.type === TransactionType.ENTRY_ADDED && item.isHumanInitiated && (
                           <Edit2 size={14} className="text-slate-600 group-hover:text-slate-400" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })
             )}
           </div>
         ) : (

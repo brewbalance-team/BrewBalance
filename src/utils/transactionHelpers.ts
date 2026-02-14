@@ -34,12 +34,28 @@ export const makeDailyBudgetCreatedTx = (
   rollover,
 });
 
-export const makeCustomRolloverTx = (date: string, rollover: number): Transaction => ({
+/**
+ * Creates a CUSTOM_ROLLOVER_SET transaction to adjust the rollover for a specific date.
+ *
+ * @param date - ISO date string (YYYY-MM-DD) for the transaction
+ * @param rollover - The new rollover value after adjustment
+ * @param delta - The actual change amount (positive = increase, negative = decrease). Defaults to 0.
+ * @param reason - Optional reason for the adjustment (e.g., 'base budget change', 'manual rollover adjustment')
+ * @returns A CustomRolloverSetTransaction object
+ */
+export const makeCustomRolloverTx = (
+  date: string,
+  rollover: number,
+  delta: number = 0,
+  reason?: string,
+): Transaction => ({
   id: `tx-roll-${date}-${crypto.randomUUID()}`,
   type: TransactionType.CUSTOM_ROLLOVER_SET,
   timestamp: now(),
   date,
   rollover,
+  delta,
+  ...(reason !== undefined && { reason }),
 });
 
 /**
