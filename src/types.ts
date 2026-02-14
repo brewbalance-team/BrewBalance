@@ -100,7 +100,9 @@ export interface DailyBudgetCreatedTransaction extends BaseTransaction {
 export interface CustomRolloverSetTransaction extends BaseTransaction {
   type: TransactionType.CUSTOM_ROLLOVER_SET;
   date: string; // YYYY-MM-DD
-  rollover: number;
+  rollover: number; // The new rollover value after adjustment
+  delta: number; // The actual change amount (positive = increase, negative = decrease)
+  reason?: string; // Why was this adjustment made (e.g., "base budget change", "manual rollover adjustment")
 }
 
 export interface ChallengeTransaction extends BaseTransaction {

@@ -11,3 +11,7 @@ No task is considered done until the following have been completed:
 1. JSDoc comments are provided for the new items; modified items have documentation updated if necessary
 
 Exception: if only documentation was generated, then `npm run format` alone is sufficient.
+
+## Writing Tests
+
+- e2e tests should only use test-id query selectors and nothing else. If no test id exists for what you want to select, add the test ID, don't write an ad-hoc css class selector.

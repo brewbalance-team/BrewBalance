@@ -111,7 +111,15 @@ Files: see `types.ts` for exact shapes.
   - Click a day to open `DayDetailModal` to view entries, set custom base budget, or override rollover.
 
 - **History** (`components/HistoryView.tsx`):
-  - Two modes: `expenses` grouped by date, and `challenges` showing active+past challenges and their final/ongoing status.
+  - Two modes: `expenses` and `challenges`.
+  - **Expenses mode**:
+    - Intent: display a ledger showing all events that have impacted the user's current budget, including both increases and decreases.
+    - Transaction types: both human-initiated transactions (e.g., expense entries, manual budget adjustments via settings or DayDetailModal) and machine-initiated transactions (e.g., automatic daily base budget additions, rollover calculations) should be displayed.
+    - Visual distinction: human-initiated and machine-initiated transactions must be visually distinct so the user can plainly see which transactions were initiated by them versus the application.
+    - Color coding: transactions should use colors to visually indicate whether they increased (e.g., green) or decreased (e.g., red) the total budget amount.
+    - Date filtering: only transactions from the current date (today) and earlier should be displayed. Future-dated transactions, if any exist in the data, should not be shown because future events should not impact the user's perception of their current budget.
+    - Temporal ordering: transactions should be displayed in reverse chronological order (newest first, oldest last) with timestamps included, allowing users to naturally identify date transitions.
+  - **Challenges mode**: shows active+past challenges and their final/ongoing status.
 
 - **Settings** (`components/Settings.tsx`):
   - Edit user profile (name, custom logo image upload), daily budgets, alarm threshold, currency, start/end dates.

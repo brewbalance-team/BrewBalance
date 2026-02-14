@@ -60,7 +60,17 @@ export const replay = (transactions?: Transaction[], throughDate?: string, store
           baseBudget: 0,
           rollover: 0,
         };
-        dailyBudgets[rolloverTx.date] = { ...existing, rollover: rolloverTx.rollover };
+        // If this is a base budget change, update the effective base budget but keep rollover unchanged
+        const newBaseBudget =
+          rolloverTx.reason === 'base budget change'
+            ? existing.baseBudget + (rolloverTx.delta || 0)
+            : existing.baseBudget;
+        const newRollover =
+          rolloverTx.reason === 'base budget change' ? existing.rollover : rolloverTx.rollover;
+        dailyBudgets[rolloverTx.date] = {
+          baseBudget: newBaseBudget,
+          rollover: newRollover,
+        };
         break;
       }
       case TransactionType.CHALLENGE_CREATED:
