@@ -167,7 +167,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-200 scheme-dark text-sm"
+                    className="w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-200 scheme-dark text-sm"
                     {...testId('expense-date-input')}
                   />
                 </div>
