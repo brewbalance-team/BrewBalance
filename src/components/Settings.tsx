@@ -362,8 +362,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full overflow-hidden">
+              <div className="space-y-2 w-full overflow-hidden">
                 <label htmlFor="startDate" className="text-sm font-semibold text-slate-300">
                   Start Date
                 </label>
@@ -372,10 +372,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   type="date"
                   value={localSettings.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
-                  className="w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
+                  className="w-full max-w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 w-full overflow-hidden">
                 <label htmlFor="endDate" className="text-sm font-semibold text-slate-300">
                   End Date <span className="font-normal text-slate-600">(Optional)</span>
                 </label>
@@ -384,7 +384,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   type="date"
                   value={localSettings.endDate || ''}
                   onChange={(e) => handleChange('endDate', e.target.value || null)}
-                  className="w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
+                  className="w-full max-w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
             </div>

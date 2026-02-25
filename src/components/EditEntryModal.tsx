@@ -88,7 +88,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <div>
+            <div className="w-full overflow-hidden">
               <label
                 htmlFor="date"
                 className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
@@ -100,7 +100,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
+                className="w-full max-w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
               />
             </div>
 
