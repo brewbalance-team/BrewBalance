@@ -1,112 +1,113 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BrewBalance" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="BrewBalance" />
+    <!-- Prevent caching to ensure PWA updates -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-  <!-- Prevent caching to ensure PWA updates -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+    <title>BrewBalance</title>
 
-  <title>BrewBalance</title>
+    <!-- App Icon -->
+    <link rel="icon" type="image/png" href="/brand-icon.png" />
 
-  <!-- App Icon -->
-  <link rel="icon" type="image/png" href="/brand-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Reset tap highlight color */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
 
-  <link rel="manifest" href="/manifest.json" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Reset tap highlight color */
-    * {
-      -webkit-tap-highlight-color: transparent;
-    }
+      /* Custom scrollbar for a cleaner look */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
 
-    /* Custom scrollbar for a cleaner look */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+        /* Slate 900 */
+      }
 
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-      /* Slate 900 */
-    }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        /* Slate 700 */
+        border-radius: 3px;
+      }
 
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      /* Slate 700 */
-      border-radius: 3px;
-    }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+        /* Slate 600 */
+      }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-      /* Slate 600 */
-    }
+      /* Remove up/down arrows from number inputs */
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
 
-    /* Remove up/down arrows from number inputs */
-    /* Chrome, Safari, Edge, Opera */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+      /* Firefox */
+      input[type='number'] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
 
-    /* Firefox */
-    input[type='number'] {
-      -moz-appearance: textfield;
-      appearance: textfield;
-    }
+      /* Safe area padding utilities for iOS PWA */
+      .pt-safe-top {
+        padding-top: env(safe-area-inset-top);
+      }
 
-    /* Safe area padding utilities for iOS PWA */
-    .pt-safe-top {
-      padding-top: env(safe-area-inset-top);
-    }
+      .pb-safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
 
-    .pb-safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom);
-    }
+      /* CRITICAL FIX FOR IOS PWA KEYBOARD */
+      /* Force user-select text on inputs to ensure focus works */
+      input,
+      textarea,
+      select {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+      }
 
-    /* CRITICAL FIX FOR IOS PWA KEYBOARD */
-    /* Force user-select text on inputs to ensure focus works */
-    input,
-    textarea,
-    select {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-
-    /* Normalize date input appearance across mobile browsers (iOS Safari/Chrome)
+      /* Normalize date input appearance across mobile browsers (iOS Safari/Chrome)
          Ensures the native calendar indicator doesn't clip the input's rounded
          corners and stays visually consistent with other text fields. */
-    input[type='date'] {
-      -webkit-appearance: none;
-      appearance: none;
-      background-clip: padding-box;
-      /* ensure there's space for the native picker icon */
-      padding-right: 1.25rem;
-    }
+      input[type='date'] {
+        -webkit-appearance: none;
+        appearance: none;
+        background-clip: padding-box;
+        /* ensure there's space for the native picker icon */
+        padding-right: 1.25rem;
+      }
 
-    /* Style the calendar picker indicator so it doesn't draw outside rounded corners */
-    input[type='date']::-webkit-calendar-picker-indicator {
-      -webkit-appearance: none;
-      appearance: none;
-      display: inline-block;
-      width: 1.5rem;
-      height: 1.5rem;
-      margin-left: 0.25rem;
-      vertical-align: middle;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
-    }
-  </style>
-  <script type="importmap">
+      /* Style the calendar picker indicator so it doesn't draw outside rounded corners */
+      input[type='date']::-webkit-calendar-picker-indicator {
+        -webkit-appearance: none;
+        appearance: none;
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-left: 0.25rem;
+        vertical-align: middle;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+    </style>
+    <script type="importmap">
       {
         "imports": {
           "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
@@ -118,11 +119,10 @@
         }
       }
     </script>
-</head>
+  </head>
 
-<body class="bg-slate-950 text-slate-50 antialiased">
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+  <body class="bg-slate-950 text-slate-50 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
