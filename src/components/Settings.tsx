@@ -372,7 +372,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   type="date"
                   value={localSettings.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
-                  className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
+                  className="w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
               <div className="space-y-2">
@@ -384,7 +384,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
                   type="date"
                   value={localSettings.endDate || ''}
                   onChange={(e) => handleChange('endDate', e.target.value || null)}
-                  className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
+                  className="w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-medium text-slate-300 scheme-dark"
                 />
               </div>
             </div>

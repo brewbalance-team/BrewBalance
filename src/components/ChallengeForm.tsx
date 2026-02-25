@@ -125,7 +125,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
-            className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
+            className="w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
           />
         </div>
         <div>
@@ -138,7 +138,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required
-            className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
+            className="w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
           />
         </div>
       </div>
@@ -202,7 +202,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
               value={recurrenceEndDate}
               onChange={(e) => setRecurrenceEndDate(e.target.value)}
               min={endDate}
-              className="w-full p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300 text-xs font-bold outline-none focus:border-amber-500"
+              className="w-full min-w-0 p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300 text-xs font-bold outline-none focus:border-amber-500"
             />
             <p className="text-[10px] text-slate-500 mt-1 leading-tight">
               If set, the challenge will stop repeating after this date. Leave blank for indefinite
