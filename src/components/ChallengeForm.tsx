@@ -114,8 +114,8 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
           className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 text-white text-sm font-bold mt-1 outline-none focus:border-amber-500"
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
+      <div className="grid grid-cols-2 gap-2 w-full overflow-hidden">
+        <div className="w-full overflow-hidden">
           <label htmlFor="startDate" className="text-[10px] font-bold text-slate-500 uppercase">
             Start <span className="text-red-500">*</span>
           </label>
@@ -125,10 +125,10 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
-            className="w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
+            className="w-full max-w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
           />
         </div>
-        <div>
+        <div className="w-full overflow-hidden">
           <label htmlFor="endDate" className="text-[10px] font-bold text-slate-500 uppercase">
             End <span className="text-red-500">*</span>
           </label>
@@ -138,7 +138,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required
-            className="w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
+            className="w-full max-w-full min-w-0 p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 text-sm font-bold mt-1 outline-none focus:border-amber-500"
           />
         </div>
       </div>
@@ -189,7 +189,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
           ))}
         </div>
         {recurrence !== 'none' && (
-          <div className="mt-3 pt-3 border-t border-slate-800 animate-in fade-in slide-in-from-top-1">
+          <div className="mt-3 pt-3 border-t border-slate-800 animate-in fade-in slide-in-from-top-1 w-full overflow-hidden">
             <label
               htmlFor="recurrenceEndDate"
               className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1"
@@ -202,7 +202,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
               value={recurrenceEndDate}
               onChange={(e) => setRecurrenceEndDate(e.target.value)}
               min={endDate}
-              className="w-full min-w-0 p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300 text-xs font-bold outline-none focus:border-amber-500"
+              className="w-full max-w-full min-w-0 p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300 text-xs font-bold outline-none focus:border-amber-500"
             />
             <p className="text-[10px] text-slate-500 mt-1 leading-tight">
               If set, the challenge will stop repeating after this date. Leave blank for indefinite
