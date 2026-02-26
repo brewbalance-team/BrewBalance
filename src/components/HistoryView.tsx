@@ -233,7 +233,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                 const iconBgColor = item.isIncrease
                   ? 'bg-emerald-950/30 text-emerald-500 border-emerald-900/30'
                   : 'bg-red-950/30 text-red-500 border-red-900/30';
-                const typeLabel = item.isHumanInitiated ? 'Human' : 'System';
+                const typeLabel = item.isHumanInitiated ? 'User' : 'System';
                 const typeLabelColor = item.isHumanInitiated ? 'text-blue-400' : 'text-amber-400';
 
                 return (
@@ -251,17 +251,21 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                     className={`w-full flex items-center justify-between p-4 ${bgColor} rounded-2xl border ${borderColor} shadow-sm hover:bg-slate-800/50 transition-colors group text-left`}
                     {...testId('ledger-item')}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full">
                       <div
-                        className={`w-10 h-10 rounded-xl ${iconBgColor} flex items-center justify-center border group-hover:scale-110 transition-transform`}
+                        className={`w-10 h-10 rounded-xl ${iconBgColor} flex items-center justify-center border group-hover:scale-110 transition-transform flex-shrink-0`}
                       >
                         {item.icon}
                       </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-slate-200 group-hover:text-white transition-colors">
+                      <div className="flex flex-1 flex-col min-w-0">
+                        <div
+                          className="font-bold text-slate-200 group-hover:text-white transition-colors truncate max-w-full"
+                          style={{ maxWidth: '100%' }}
+                          title={item.description}
+                        >
                           {item.description}
                         </div>
-                        <div className="text-xs text-slate-500 font-medium space-x-2">
+                        <div className="text-xs text-slate-500 font-medium space-x-2 flex items-center">
                           <span>
                             {new Date(item.timestamp).toLocaleTimeString([], {
                               hour: '2-digit',
@@ -275,19 +279,25 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                           </span>
                         </div>
                       </div>
-                    </div>
-                    {item.amount > 0 && (
-                      <div className={`flex items-center gap-3 ${amountColor}`}>
-                        <div className="font-black text-lg">
-                          {item.isIncrease ? '+' : '-'}
-                          {currency}
-                          {item.amount}
-                        </div>
+                      <div
+                        className={`flex items-center gap-1 ${amountColor} flex-shrink-0 min-w-[90px] justify-end`}
+                        style={{ maxWidth: 120 }}
+                      >
+                        <span
+                          className="font-black text-lg truncate max-w-[80px] whitespace-nowrap overflow-hidden text-ellipsis"
+                          title={`${item.isIncrease ? '+' : '-'}${currency}${item.amount}`}
+                          data-testid="ledger-amount"
+                        >
+                          {`${item.isIncrease ? '+' : '-'}${currency}${item.amount}`}
+                        </span>
                         {item.type === TransactionType.ENTRY_ADDED && item.isHumanInitiated && (
-                          <Edit2 size={14} className="text-slate-600 group-hover:text-slate-400" />
+                          <Edit2
+                            size={14}
+                            className="text-slate-600 group-hover:text-slate-400 flex-shrink-0"
+                          />
                         )}
                       </div>
-                    )}
+                    </div>
                   </button>
                 );
               })
