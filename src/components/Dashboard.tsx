@@ -653,7 +653,11 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-0.5">
                   Spent Today
                 </span>
-                <span className="text-3xl font-black text-slate-300 leading-none">
+                <span
+                  className="text-3xl font-black text-slate-300 leading-none break-all max-w-[10ch] sm:max-w-none"
+                  style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
+                  data-testid="dashboard-spent-today"
+                >
                   {currency}
                   {todayStats.spent}
                 </span>
