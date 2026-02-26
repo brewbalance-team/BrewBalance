@@ -823,7 +823,7 @@ test.describe('BrewBalance App', () => {
       return Array.from(buttons).map((item) => {
         const element = item as HTMLElement;
         const noteElement = element.querySelector('div[class*="font-bold"]');
-        const amountElement = element.querySelector('div[class*="text-lg"]');
+        const amountElement = element.querySelector('[data-testid="ledger-amount"]');
         return {
           note: noteElement?.textContent || '',
           amount: amountElement?.textContent || '',
