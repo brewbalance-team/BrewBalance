@@ -10,32 +10,26 @@ export function runPlaywright(args: string[] = process.argv.slice(2)): number {
   const PLAYWRIGHT_TAG = '';
   const isArch = process.platform === 'linux' && existsSync('/etc/arch-release');
 
-  const invoke = (
-    command: string,
-    commandArgs: string[],
-  ): SpawnSyncReturns<Buffer> => {
+  const invoke = (command: string, commandArgs: string[]): SpawnSyncReturns<Buffer> => {
     return spawnSync(command, commandArgs, { stdio: 'inherit', shell: true });
   };
 
   if (isArch) {
     console.info('Arch Linux detected — running Playwright inside Podman');
 
-    const result = invoke(
-      'podman',
-      [
-        'run',
-        '--rm',
-        '-t',
-        '-v',
-        `${process.cwd()}:/work`,
-        '-w',
-        '/work',
-        `mcr.microsoft.com/playwright:${PLAYWRIGHT_TAG || 'v1.58.2-noble'}`,
-        'bash',
-        '-lc',
-        `npx playwright test ${args.join(' ')}`,
-      ],
-    );
+    const result = invoke('podman', [
+      'run',
+      '--rm',
+      '-t',
+      '-v',
+      `${process.cwd()}:/work`,
+      '-w',
+      '/work',
+      `mcr.microsoft.com/playwright:${PLAYWRIGHT_TAG || 'v1.58.2-noble'}`,
+      'bash',
+      '-lc',
+      `npx playwright test ${args.join(' ')}`,
+    ]);
 
     if (result.error) {
       console.error('podman execution failed:', result.error.message);
