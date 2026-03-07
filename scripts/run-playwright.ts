@@ -1,5 +1,6 @@
 import { spawnSync, SpawnSyncReturns } from 'child_process';
 import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 /**
  * Executes the logic that would normally be run when the script is invoked from the
@@ -53,8 +54,13 @@ export function runPlaywright(args: string[] = process.argv.slice(2)): number {
   }
 }
 
-// Only call process.exit when run directly; this allows us to import the module in tests
-// without terminating the test runner.
-if (require.main === module) {
+// In ESM context there is no `require`; instead detect whether this file
+// is the entry point by comparing the current file URL with the first argument
+// passed to Node.js.  `tsx` sets `process.argv[1]` to the compiled script path.
+//
+// Keeping the check lets us import/run this module in tests without invoking
+// `process.exit` unexpectedly.
+const scriptPath = fileURLToPath(import.meta.url);
+if (process.argv[1] === scriptPath) {
   process.exit(runPlaywright());
 }
