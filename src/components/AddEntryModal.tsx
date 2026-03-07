@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Beer, Check } from 'lucide-react';
 
+import { getCurrentDate } from '../utils/clock';
+
 interface AddEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +13,7 @@ interface AddEntryModalProps {
 const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, currency }) => {
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState<string>('');
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(getCurrentDate());
 
   if (!isOpen) return null;
 
