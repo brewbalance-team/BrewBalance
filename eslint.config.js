@@ -77,7 +77,7 @@ export default [
   },
   // Node.js config files
   {
-    files: ['*.config.{ts,js}', 'src/utils/aiHelpers.ts', 'vite.config.ts'],
+    files: ['*.config.{ts,js}', 'src/utils/aiHelpers.ts', 'vite.config.ts', 'scripts/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
