@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DailyStats, BudgetStatus, Settings } from '../types';
 import { getMonthDates, formatDateISO } from '../utils/dateUtils';
 import { testId } from '../utils/testUtils';
+import { getCurrentDate } from '../utils/clock';
 
 import DayDetailModal from './DayDetailModal';
 
@@ -14,7 +15,7 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdateSettings }) => {
-  const today = new Date();
+  const today = getCurrentDate();
   const [currentMonth, setCurrentMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1),
   );
@@ -61,7 +62,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
     }
   };
 
-  const todayISO = formatDateISO(new Date());
+  const todayISO = formatDateISO(getCurrentDate());
 
   const handleDayClick = (dateStr: string) => {
     const stats = statsMap[dateStr];

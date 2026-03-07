@@ -14,6 +14,7 @@ import {
 import { Settings as SettingsType, DailyStats } from '../types';
 import { APP_VERSION } from '../constants';
 import { testId } from '../utils/testUtils';
+import { getCurrentDate } from '../utils/clock';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -107,7 +108,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
     ];
 
     const allDates = Object.keys(statsMap).sort((a, b) => b.localeCompare(a));
-    const today = new Date().toISOString().split('T')[0];
+    const today = getCurrentDate().toISOString().split('T')[0];
 
     const exportRows = allDates
       .filter((date) => {
@@ -141,7 +142,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
 
   const handleShareFile = async () => {
     const csvContent = generateCSV();
-    const now = new Date();
+    const now = getCurrentDate();
     const timestamp =
       now.getFullYear() +
       '-' +
