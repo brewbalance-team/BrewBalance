@@ -67,6 +67,8 @@ export type TabView = 'dashboard' | 'add' | 'calendar' | 'history' | 'settings';
 
 export enum TransactionType {
   ENTRY_ADDED = 'ENTRY_ADDED',
+  ENTRY_UPDATED = 'ENTRY_UPDATED',
+  ENTRY_DELETED = 'ENTRY_DELETED',
   SETTINGS_UPDATED = 'SETTINGS_UPDATED',
   DAILY_BUDGET_CREATED = 'DAILY_BUDGET_CREATED',
   CUSTOM_ROLLOVER_SET = 'CUSTOM_ROLLOVER_SET',
@@ -83,6 +85,17 @@ export interface BaseTransaction {
 export interface EntryAddedTransaction extends BaseTransaction {
   type: TransactionType.ENTRY_ADDED;
   entry: Entry;
+}
+
+export interface EntryUpdatedTransaction extends BaseTransaction {
+  type: TransactionType.ENTRY_UPDATED;
+  entryId: string;
+  updates: Partial<Entry>;
+}
+
+export interface EntryDeletedTransaction extends BaseTransaction {
+  type: TransactionType.ENTRY_DELETED;
+  entryId: string;
 }
 
 export interface SettingsUpdatedTransaction extends BaseTransaction {
@@ -112,6 +125,8 @@ export interface ChallengeTransaction extends BaseTransaction {
 
 export type Transaction =
   | EntryAddedTransaction
+  | EntryUpdatedTransaction
+  | EntryDeletedTransaction
   | SettingsUpdatedTransaction
   | DailyBudgetCreatedTransaction
   | CustomRolloverSetTransaction

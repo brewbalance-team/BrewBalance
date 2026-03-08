@@ -845,4 +845,60 @@ test.describe('BrewBalance App', () => {
     expect(coffeeEntry?.amount).toMatch(/\d+/); // Should contain a number
     expect(lunchEntry?.amount).toMatch(/\d+/);
   });
+
+  test('should populate edit modal with previous expense details', async ({ page }) => {
+    const testDate = new Date('2026-02-09T10:00:00');
+
+    await page.goto('/');
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set mock time
+    await page.evaluate((time: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const clock = (window as any).__brewBalanceClock;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (clock?.setMockTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        clock.setMockTime(time);
+      }
+    }, testDate.getTime());
+
+    // Reload with mocked time
+    await page.reload();
+    await page.locator('[data-testid="app-title"]').waitFor();
+
+    // Set up settings
+    await page.locator('[data-testid="nav-settings"]').click();
+    await page.fill('[data-testid="settings-weekday-budget"]', '300');
+    await page.fill('[data-testid="settings-weekend-budget"]', '300');
+    await page.locator('[data-testid="settings-save-button"]').click();
+
+    // Add an expense
+    await page.locator('[data-testid="nav-add"]').click();
+    await page.fill('[data-testid="expense-amount-input"]', '42.50');
+    await page.fill('[data-testid="expense-note-input"]', 'Test beer expense');
+    await page.fill('[data-testid="expense-date-input"]', '2026-02-09');
+    await page.locator('[data-testid="expense-submit-button"]').click();
+    await page.waitForTimeout(300);
+
+    // Navigate to history
+    await page.locator('[data-testid="nav-history"]').click();
+    await page.waitForTimeout(300);
+
+    // Click on the expense to edit (should be the first ledger item)
+    const ledgerItem = page.locator('[data-testid="ledger-item"]').first();
+    await ledgerItem.click();
+
+    // Wait for edit modal to appear
+    await page.locator('[data-testid="edit-entry-modal"]').waitFor();
+
+    // Check that the modal fields are populated with the correct values
+    const amountInput = page.locator('[data-testid="edit-amount-input"]');
+    const noteInput = page.locator('[data-testid="edit-note-input"]');
+    const dateInput = page.locator('[data-testid="edit-date-input"]');
+
+    await expect(amountInput).toHaveValue('42.5');
+    await expect(noteInput).toHaveValue('Test beer expense');
+    await expect(dateInput).toHaveValue('2026-02-09');
+  });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Trash2, Beer, AlertCircle } from 'lucide-react';
 
 import { Entry } from '../types';
@@ -24,6 +24,16 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
   const [note, setNote] = useState(entry?.note || '');
   const [date, setDate] = useState(entry?.date || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Update state when entry prop changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    if (entry) {
+      setAmount(entry.amount.toString());
+      setNote(entry.note);
+      setDate(entry.date);
+    }
+  }, [entry]);
 
   if (!isOpen || !entry) return null;
 
@@ -54,7 +64,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all animate-in fade-in duration-200">
-      <div className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0">
+      <div className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0" data-testid="edit-entry-modal">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-white flex items-center gap-3">
             <div className="bg-slate-800 p-2.5 rounded-xl text-slate-200 border border-slate-700">
@@ -84,6 +94,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
               value={amount}
               onChange={handleAmountChange}
               className="w-full p-4 text-3xl font-black bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 focus:ring-0 outline-none text-center text-white placeholder-slate-800 transition-all"
+              data-testid="edit-amount-input"
             />
           </div>
 
@@ -101,6 +112,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full max-w-full min-w-0 p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
+                data-testid="edit-date-input"
               />
             </div>
 
@@ -119,6 +131,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-white placeholder-slate-700"
+                data-testid="edit-note-input"
               />
             </div>
           </div>

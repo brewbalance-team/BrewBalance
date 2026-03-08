@@ -45,6 +45,22 @@ export const replay = (transactions?: Transaction[], throughDate?: string, store
         entries.push(entryTx.entry);
         break;
       }
+      case TransactionType.ENTRY_UPDATED: {
+        const updateTx = tx;
+        const index = entries.findIndex((e) => e.id === updateTx.entryId);
+        if (index !== -1) {
+          entries[index] = { ...entries[index], ...updateTx.updates } as Entry;
+        }
+        break;
+      }
+      case TransactionType.ENTRY_DELETED: {
+        const deleteTx = tx;
+        const index = entries.findIndex((e) => e.id === deleteTx.entryId);
+        if (index !== -1) {
+          entries.splice(index, 1);
+        }
+        break;
+      }
       case TransactionType.DAILY_BUDGET_CREATED: {
         const budgetTx = tx;
         dailyBudgets[budgetTx.date] = {
