@@ -1,56 +1,68 @@
-import { spawnSync, SpawnSyncReturns } from 'child_process';
+/* eslint-env node */
+
+import { spawn, ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
+
+// promisified helper exported independently so tests can stub or spy on it
+export function invoke(command: string, commandArgs: string[]): Promise<number> {
+  return new Promise((resolve) => {
+    const child: ChildProcess = spawn(command, commandArgs, {
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    });
+
+    const forward = (signal: number) => {
+      if (child && !child.killed) {
+        child.kill(signal);
+      }
+    };
+
+    process.on('SIGINT', forward);
+    process.on('SIGTERM', forward);
+
+    child.on('exit', (code) => {
+      process.off('SIGINT', forward);
+      process.off('SIGTERM', forward);
+      resolve(code ?? 1);
+    });
+  });
+}
 
 /**
  * Executes the logic that would normally be run when the script is invoked from the
  * command line.  Returning an exit code instead of calling `process.exit` makes the
- * behaviour testable.
+ * behaviour testable.  The implementation uses async/await so that the caller can
+ * await completion and we can properly forward signals from Node -> Podman -> container.
  */
-export function runPlaywright(args: string[] = process.argv.slice(2)): number {
+export async function runPlaywright(args: string[] = process.argv.slice(2)): Promise<number> {
   const PLAYWRIGHT_TAG = '';
   const isArch = process.platform === 'linux' && existsSync('/etc/arch-release');
-
-  const invoke = (command: string, commandArgs: string[]): SpawnSyncReturns<Buffer> => {
-    return spawnSync(command, commandArgs, { stdio: 'inherit', shell: true });
-  };
 
   if (isArch) {
     console.info('Arch Linux detected — running Playwright inside Podman');
 
-    const result = invoke('podman', [
+    const result = await invoke('podman', [
       'run',
       '--rm',
+      '--init',
       '-t',
       '-v',
       `${process.cwd()}:/work`,
       '-w',
       '/work',
       `mcr.microsoft.com/playwright:${PLAYWRIGHT_TAG || 'v1.58.2-noble'}`,
-      'bash',
-      '-lc',
-      `npx playwright test ${args.join(' ')}`,
+      'npx',
+      'playwright',
+      'test',
+      ...args,
     ]);
 
-    if (result.error) {
-      console.error('podman execution failed:', result.error.message);
-      return 1;
-    }
-
-    return result.status ?? 1;
+    return result;
   } else {
     console.info('Running Playwright locally');
-
-    // On Windows the executable is actually `npx.cmd` so shell:true allows us to invoke
-    // the command name generically and still have the shell resolve the correct file.
-    const result = invoke('npx', ['playwright', 'test', ...args]);
-
-    if (result.error) {
-      console.error('npx execution failed:', result.error.message);
-      return 1;
-    }
-
-    return result.status ?? 1;
+    const result = await invoke('npx', ['playwright', 'test', ...args]);
+    return result;
   }
 }
 
@@ -62,5 +74,5 @@ export function runPlaywright(args: string[] = process.argv.slice(2)): number {
 // `process.exit` unexpectedly.
 const scriptPath = fileURLToPath(import.meta.url);
 if (process.argv[1] === scriptPath) {
-  process.exit(runPlaywright());
+  void runPlaywright().then((code) => process.exit(code));
 }
