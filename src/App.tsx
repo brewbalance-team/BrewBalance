@@ -11,7 +11,12 @@ import { getTodayISO, addDays, addMonths, isWeekend } from './utils/dateUtils';
 import { testId } from './utils/testUtils';
 import { now, getCurrentDate } from './utils/clock';
 import { replay, ensureDailyBudgetForDate, materializeUpTo } from './utils/replayEngine';
-import { makeCustomRolloverTx, makeSettingsUpdatedTx } from './utils/transactionHelpers';
+import {
+  makeCustomRolloverTx,
+  makeSettingsUpdatedTx,
+  makeEntryUpdatedTx,
+  makeEntryDeletedTx,
+} from './utils/transactionHelpers';
 import { migrateFromLegacyModel } from './utils/migration';
 import { appendTransaction, clearTransactions } from './utils/transactionStore';
 import Dashboard from './components/Dashboard';
@@ -209,10 +214,27 @@ const App: React.FC = () => {
   };
 
   const handleUpdateEntry = (updatedEntry: Entry) => {
+    // Find the original entry to compute updates
+    const originalEntry = entries.find((e) => e.id === updatedEntry.id);
+    if (!originalEntry) return;
+
+    const updates: Partial<Entry> = {};
+    if (updatedEntry.amount !== originalEntry.amount) updates.amount = updatedEntry.amount;
+    if (updatedEntry.note !== originalEntry.note) updates.note = updatedEntry.note;
+    if (updatedEntry.date !== originalEntry.date) updates.date = updatedEntry.date;
+
+    // Append transaction for audit log and replay
+    appendTransaction(makeEntryUpdatedTx(updatedEntry.id, updates));
+
+    // Update local state
     setEntries((prev) => prev.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
   };
 
   const handleDeleteEntry = (id: string) => {
+    // Append transaction for audit log and replay
+    appendTransaction(makeEntryDeletedTx(id));
+
+    // Update local state
     setEntries((prev) => prev.filter((e) => e.id !== id));
   };
 

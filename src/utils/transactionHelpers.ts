@@ -14,6 +14,21 @@ export const makeEntryAddedTx = (entry: Entry): Transaction => ({
   entry,
 });
 
+export const makeEntryUpdatedTx = (entryId: string, updates: Partial<Entry>): Transaction => ({
+  id: `tx-update-${entryId}-${crypto.randomUUID()}`,
+  type: TransactionType.ENTRY_UPDATED,
+  timestamp: now(),
+  entryId,
+  updates,
+});
+
+export const makeEntryDeletedTx = (entryId: string): Transaction => ({
+  id: `tx-delete-${entryId}-${crypto.randomUUID()}`,
+  type: TransactionType.ENTRY_DELETED,
+  timestamp: now(),
+  entryId,
+});
+
 export const makeSettingsUpdatedTx = (settings: Partial<Settings>): Transaction => ({
   id: `tx-settings-${crypto.randomUUID()}`,
   type: TransactionType.SETTINGS_UPDATED,
