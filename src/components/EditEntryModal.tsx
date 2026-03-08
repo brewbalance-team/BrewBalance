@@ -64,7 +64,10 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all animate-in fade-in duration-200">
-      <div className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0" data-testid="edit-entry-modal">
+      <div
+        className="bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-800 p-6 animate-in slide-in-from-bottom-10 duration-300 mb-24 sm:mb-0"
+        data-testid="edit-entry-modal"
+      >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-white flex items-center gap-3">
             <div className="bg-slate-800 p-2.5 rounded-xl text-slate-200 border border-slate-700">
