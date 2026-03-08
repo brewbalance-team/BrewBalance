@@ -26,9 +26,9 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Update state when entry prop changes
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (entry) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAmount(entry.amount.toString());
       setNote(entry.note);
       setDate(entry.date);
