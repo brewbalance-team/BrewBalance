@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import { spawn, ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
