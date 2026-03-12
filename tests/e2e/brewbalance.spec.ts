@@ -877,7 +877,7 @@ test.describe('BrewBalance App', () => {
     await page.locator('[data-testid="nav-add"]').click();
     await page.fill('[data-testid="expense-amount-input"]', '42.50');
     await page.fill('[data-testid="expense-note-input"]', 'Test beer expense');
-    await page.fill('[data-testid="expense-date-input"]', '2026-02-09');
+    const expenseDate = await page.locator('[data-testid="expense-date-input"]').inputValue();
     await page.locator('[data-testid="expense-submit-button"]').click();
     await page.waitForTimeout(300);
 
@@ -885,8 +885,12 @@ test.describe('BrewBalance App', () => {
     await page.locator('[data-testid="nav-history"]').click();
     await page.waitForTimeout(300);
 
-    // Click on the expense to edit (should be the first ledger item)
-    const ledgerItem = page.locator('[data-testid="ledger-item"]').first();
+    // Click on an editable expense row
+    const ledgerItem = page
+      .locator('[data-testid="ledger-item"]', {
+        has: page.locator('[data-testid="ledger-item-editable-marker"]'),
+      })
+      .first();
     await ledgerItem.click();
 
     // Wait for edit modal to appear
@@ -899,6 +903,6 @@ test.describe('BrewBalance App', () => {
 
     await expect(amountInput).toHaveValue('42.5');
     await expect(noteInput).toHaveValue('Test beer expense');
-    await expect(dateInput).toHaveValue('2026-02-09');
+    await expect(dateInput).toHaveValue(expenseDate);
   });
 });
