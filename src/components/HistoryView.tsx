@@ -251,6 +251,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                     className={`w-full flex items-center justify-between p-4 ${bgColor} rounded-2xl border ${borderColor} shadow-sm hover:bg-slate-800/50 transition-colors group text-left`}
                     {...testId('ledger-item')}
                   >
+                    {item.type === TransactionType.ENTRY_ADDED && item.isHumanInitiated && (
+                      <span className="sr-only" {...testId('ledger-item-editable-marker')}>
+                        editable
+                      </span>
+                    )}
                     <div className="flex items-center gap-3 w-full">
                       <div
                         className={`w-10 h-10 rounded-xl ${iconBgColor} flex items-center justify-center border group-hover:scale-110 transition-transform flex-shrink-0`}
