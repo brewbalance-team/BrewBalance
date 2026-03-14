@@ -29,6 +29,26 @@ export const makeEntryDeletedTx = (entryId: string): Transaction => ({
   entryId,
 });
 
+/**
+ * Creates an ENTRY_REVERSAL transaction to implement immutable ledger for amount changes.
+ * When an entry's amount is edited, instead of modifying it directly, we create
+ * a reversal (negative entry) and then add a new corrected entry.
+ *
+ * @param originalEntryId - The ID of the entry being reversed
+ * @param reversalEntry - The reversal entry with negative amount
+ * @returns An EntryReversalTransaction object
+ */
+export const makeEntryReversalTx = (
+  originalEntryId: string,
+  reversalEntry: Entry,
+): Transaction => ({
+  id: `tx-reversal-${originalEntryId}-${crypto.randomUUID()}`,
+  type: TransactionType.ENTRY_REVERSAL,
+  timestamp: now(),
+  originalEntryId,
+  reversalEntry,
+});
+
 export const makeSettingsUpdatedTx = (settings: Partial<Settings>): Transaction => ({
   id: `tx-settings-${crypto.randomUUID()}`,
   type: TransactionType.SETTINGS_UPDATED,
