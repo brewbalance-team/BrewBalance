@@ -16,7 +16,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
-    "@google/genai": "^1.44.0",
+    "@google/genai": "^1.45.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.4",
