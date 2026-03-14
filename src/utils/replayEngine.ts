@@ -61,6 +61,17 @@ export const replay = (transactions?: Transaction[], throughDate?: string, store
         }
         break;
       }
+      case TransactionType.ENTRY_REVERSAL: {
+        const reversalTx = tx;
+        // Mark the original entry as reversed by removing it, then add the reversal entry
+        const index = entries.findIndex((e) => e.id === reversalTx.originalEntryId);
+        if (index !== -1) {
+          entries.splice(index, 1);
+        }
+        // Add the reversal entry (which has negative amount)
+        entries.push(reversalTx.reversalEntry);
+        break;
+      }
       case TransactionType.DAILY_BUDGET_CREATED: {
         const budgetTx = tx;
         dailyBudgets[budgetTx.date] = {

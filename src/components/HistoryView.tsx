@@ -82,6 +82,17 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           break;
         }
 
+        case TransactionType.ENTRY_REVERSAL: {
+          const reversalTx = tx as unknown as { reversalEntry: Entry };
+          const reversalEntry = reversalTx.reversalEntry;
+          txDate = reversalEntry.date;
+          txDescription = reversalEntry.note;
+          txAmount = Math.abs(reversalEntry.amount); // Display absolute value
+          isIncrease = false; // Reversals are shown as expenses
+          isHumanInitiated = true;
+          break;
+        }
+
         case TransactionType.DAILY_BUDGET_CREATED: {
           const budgetTx = tx as unknown as { date: string; baseBudget: number };
           txDate = budgetTx.date;
@@ -149,6 +160,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       let icon: React.ReactNode;
       if (item.type === TransactionType.ENTRY_ADDED) {
         icon = <TrendingUp size={18} />;
+      } else if (item.type === TransactionType.ENTRY_REVERSAL) {
+        icon = <AlertCircle size={18} />;
       } else if (item.type === TransactionType.DAILY_BUDGET_CREATED) {
         icon = <Zap size={18} />;
       } else if (item.type === TransactionType.CUSTOM_ROLLOVER_SET) {

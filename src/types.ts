@@ -69,6 +69,7 @@ export enum TransactionType {
   ENTRY_ADDED = 'ENTRY_ADDED',
   ENTRY_UPDATED = 'ENTRY_UPDATED',
   ENTRY_DELETED = 'ENTRY_DELETED',
+  ENTRY_REVERSAL = 'ENTRY_REVERSAL',
   SETTINGS_UPDATED = 'SETTINGS_UPDATED',
   DAILY_BUDGET_CREATED = 'DAILY_BUDGET_CREATED',
   CUSTOM_ROLLOVER_SET = 'CUSTOM_ROLLOVER_SET',
@@ -96,6 +97,17 @@ export interface EntryUpdatedTransaction extends BaseTransaction {
 export interface EntryDeletedTransaction extends BaseTransaction {
   type: TransactionType.ENTRY_DELETED;
   entryId: string;
+}
+
+/**
+ * Transaction that records the reversal of an entry for an amount change.
+ * When an entry's amount is edited, instead of modifying it directly, we create
+ * a reversal (negative entry) to maintain an immutable ledger.
+ */
+export interface EntryReversalTransaction extends BaseTransaction {
+  type: TransactionType.ENTRY_REVERSAL;
+  originalEntryId: string; // The ID of the entry being reversed
+  reversalEntry: Entry; // The reversal entry (will have negative of original amount)
 }
 
 export interface SettingsUpdatedTransaction extends BaseTransaction {
@@ -127,6 +139,7 @@ export type Transaction =
   | EntryAddedTransaction
   | EntryUpdatedTransaction
   | EntryDeletedTransaction
+  | EntryReversalTransaction
   | SettingsUpdatedTransaction
   | DailyBudgetCreatedTransaction
   | CustomRolloverSetTransaction

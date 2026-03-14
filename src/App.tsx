@@ -16,6 +16,7 @@ import {
   makeSettingsUpdatedTx,
   makeEntryUpdatedTx,
   makeEntryDeletedTx,
+  makeEntryReversalTx,
 } from './utils/transactionHelpers';
 import { migrateFromLegacyModel } from './utils/migration';
 import { appendTransaction, clearTransactions } from './utils/transactionStore';
@@ -218,16 +219,51 @@ const App: React.FC = () => {
     const originalEntry = entries.find((e) => e.id === updatedEntry.id);
     if (!originalEntry) return;
 
-    const updates: Partial<Entry> = {};
-    if (updatedEntry.amount !== originalEntry.amount) updates.amount = updatedEntry.amount;
-    if (updatedEntry.note !== originalEntry.note) updates.note = updatedEntry.note;
-    if (updatedEntry.date !== originalEntry.date) updates.date = updatedEntry.date;
+    const amountChanged = updatedEntry.amount !== originalEntry.amount;
 
-    // Append transaction for audit log and replay
-    appendTransaction(makeEntryUpdatedTx(updatedEntry.id, updates));
+    if (amountChanged) {
+      // Immutable ledger: create a reversal + new entry instead of directly modifying
+      // 1. Create reversal entry (negates the original)
+      const reversalEntry: Entry = {
+        ...originalEntry,
+        id: `${originalEntry.id}-reversal`,
+        amount: -originalEntry.amount,
+        note: `Reversal of ${originalEntry.note || 'entry'}`,
+        timestamp: now(),
+      };
 
-    // Update local state
-    setEntries((prev) => prev.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
+      // 2. Create new entry with updated details
+      const correctedEntry: Entry = {
+        ...updatedEntry,
+        id: `${originalEntry.id}-correction`,
+        timestamp: now(),
+      };
+
+      // Append reversal transaction
+      appendTransaction(makeEntryReversalTx(originalEntry.id, reversalEntry));
+      // Append the new corrected entry
+      appendTransaction({
+        id: `tx-entry-${correctedEntry.id}`,
+        type: TransactionType.ENTRY_ADDED,
+        timestamp: correctedEntry.timestamp,
+        entry: correctedEntry,
+      });
+
+      // Update local state: remove original, add reversal + correction
+      setEntries((prev) => [
+        ...prev.filter((e) => e.id !== originalEntry.id),
+        reversalEntry,
+        correctedEntry,
+      ]);
+    } else {
+      // Non-amount changes: use standard ENTRY_UPDATED transaction
+      const updates: Partial<Entry> = {};
+      if (updatedEntry.note !== originalEntry.note) updates.note = updatedEntry.note;
+      if (updatedEntry.date !== originalEntry.date) updates.date = updatedEntry.date;
+
+      appendTransaction(makeEntryUpdatedTx(updatedEntry.id, updates));
+      setEntries((prev) => prev.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
+    }
   };
 
   const handleDeleteEntry = (id: string) => {
