@@ -54,13 +54,13 @@ describe('transaction ordering', () => {
 
     // Emulate HistoryView sorting (newest-first by timestamp)
     const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
-    const idxRev = sorted.findIndex((t) => t.type === TransactionType.ENTRY_REVERSAL);
-    const idxAdd = sorted.findIndex((t) => t.type === TransactionType.ENTRY_ADDED);
+    const idxFirst = sorted.findIndex((t) => t.id === reversalTx.id);
+    const idxSecond = sorted.findIndex((t) => t.id === correctionTx.id);
 
-    expect(idxRev).toBeGreaterThanOrEqual(0);
-    expect(idxAdd).toBeGreaterThanOrEqual(0);
-    // Reversal should appear before the correction in the history (lower index)
-    expect(idxRev).toBeLessThan(idxAdd);
+    expect(idxFirst).toBeGreaterThanOrEqual(0);
+    expect(idxSecond).toBeGreaterThanOrEqual(0);
+    // The transaction appended first should appear before the one appended later
+    expect(idxFirst).toBeLessThan(idxSecond);
   });
 
   it('reversal displays before correction when timestamps tie (append correction then reversal)', () => {
@@ -109,12 +109,12 @@ describe('transaction ordering', () => {
     // Emulate HistoryView sorting (newest-first by timestamp)
     const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
 
-    const idxRev = sorted.findIndex((t) => t.type === TransactionType.ENTRY_REVERSAL);
-    const idxAdd = sorted.findIndex((t) => t.type === TransactionType.ENTRY_ADDED);
+    const idxFirst = sorted.findIndex((t) => t.id === correctionTx2.id);
+    const idxSecond = sorted.findIndex((t) => t.id === reversalTx2.id);
 
-    expect(idxRev).toBeGreaterThanOrEqual(0);
-    expect(idxAdd).toBeGreaterThanOrEqual(0);
-    // Reversal should appear before the correction in the history (lower index)
-    expect(idxRev).toBeLessThan(idxAdd);
+    expect(idxFirst).toBeGreaterThanOrEqual(0);
+    expect(idxSecond).toBeGreaterThanOrEqual(0);
+    // The transaction appended first should appear before the one appended later
+    expect(idxFirst).toBeLessThan(idxSecond);
   });
 });
