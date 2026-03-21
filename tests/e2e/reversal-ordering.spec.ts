@@ -53,7 +53,7 @@ test.describe('Immutable Ledger - Reversal Ordering', () => {
 
     expect(reversalIndex).toBeGreaterThanOrEqual(0);
     expect(correctionIndex).toBeGreaterThanOrEqual(0);
-    // Reversal should appear before the correction (lower index)
-    expect(reversalIndex).toBeLessThan(correctionIndex);
+    // The corrected (new) transaction should appear above the reversal (newer first)
+    expect(correctionIndex).toBeLessThan(reversalIndex);
   });
 });
