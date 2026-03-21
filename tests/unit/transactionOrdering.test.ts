@@ -54,8 +54,6 @@ describe('transaction ordering', () => {
 
     // Emulate HistoryView sorting (newest-first by timestamp)
     const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
-
-
     const idxRev = sorted.findIndex((t) => t.type === TransactionType.ENTRY_REVERSAL);
     const idxAdd = sorted.findIndex((t) => t.type === TransactionType.ENTRY_ADDED);
 
