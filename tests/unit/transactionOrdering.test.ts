@@ -51,14 +51,9 @@ describe('transaction ordering', () => {
     appendTransaction(correctionTx, store);
 
     const txs = loadTransactions(store);
-    // Debug: show loaded order
-    // eslint-disable-next-line no-console
-    console.log('loaded txs (test1):', txs.map((t) => ({ id: t.id, type: t.type, timestamp: t.timestamp })));
 
     // Emulate HistoryView sorting (newest-first by timestamp)
     const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
-    // eslint-disable-next-line no-console
-    console.log('sorted desc (test1):', sorted.map((t) => ({ id: t.id, type: t.type, timestamp: t.timestamp })));
 
 
     const idxRev = sorted.findIndex((t) => t.type === TransactionType.ENTRY_REVERSAL);
@@ -112,14 +107,9 @@ describe('transaction ordering', () => {
     appendTransaction(reversalTx2, store);
 
     const txs = loadTransactions(store);
-    // Debug: show loaded order
-    // eslint-disable-next-line no-console
-    console.log('loaded txs (test2):', txs.map((t) => ({ id: t.id, type: t.type, timestamp: t.timestamp })));
 
     // Emulate HistoryView sorting (newest-first by timestamp)
     const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
-    // eslint-disable-next-line no-console
-    console.log('sorted desc (test2):', sorted.map((t) => ({ id: t.id, type: t.type, timestamp: t.timestamp })));
 
     const idxRev = sorted.findIndex((t) => t.type === TransactionType.ENTRY_REVERSAL);
     const idxAdd = sorted.findIndex((t) => t.type === TransactionType.ENTRY_ADDED);
