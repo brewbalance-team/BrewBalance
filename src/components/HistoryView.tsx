@@ -152,8 +152,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       }
     }
 
-    // Sort by timestamp descending (newest first)
-    items.sort((a, b) => b.timestamp - a.timestamp);
+    // Preserve transaction insertion order from the store, but display newest
+    // appended items first in the history view by reversing the array. We rely
+    // on the transaction store to preserve append order so callers can control
+    // ordering by appending transactions in the desired sequence.
+    items.reverse();
 
     // Assign icons
     return items.map((item) => {

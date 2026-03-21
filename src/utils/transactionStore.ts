@@ -121,17 +121,12 @@ export const appendTransaction = (tx: Transaction, store?: DataStore): void => {
   // Prevent duplicate ids
   if (txs.some((t) => t.id === tx.id)) return;
   txs.push(tx);
-  // Keep transactions sorted by timestamp (ascending). If timestamps are equal,
-  // preserve the existing insertion order so the transaction that was appended
-  // earlier remains earlier in the array. This allows callers to ensure display
-  // order by appending transactions in the desired sequence without relying on
-  // type-based priorities.
-  const indexById = new Map(txs.map((t, i) => [t.id, i]));
-  txs.sort((a, b) => {
-    if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
-    // Fallback to original insertion index for tie-breaker
-    return (indexById.get(a.id) ?? 0) - (indexById.get(b.id) ?? 0);
-  });
+  // Preserve the append order: do not reorder transactions here. The caller
+  // controls ordering by the sequence in which transactions are appended.
+  // This avoids any surprises when users edit entries and rely on creation order.
+  // txs.sort(...) intentionally removed.
+  // No-op: keep txs in appended order
+
   saveTransactions(txs, s);
 };
 
