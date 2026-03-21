@@ -129,14 +129,18 @@ export const appendTransaction = (tx: Transaction, store?: DataStore): void => {
     if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
 
     const typePriority = (t: TransactionType) => {
+      // Lower numbers sort earlier. For identical timestamps we want reversals to
+      // come before corrections in storage so that the UI (which sorts by
+      // timestamp descending) will display the reversal first. Therefore reversals
+      // get the highest precedence (lowest numeric value).
       switch (t) {
-        case TransactionType.ENTRY_ADDED:
-          return 0;
-        case TransactionType.ENTRY_UPDATED:
-          return 1;
-        case TransactionType.ENTRY_DELETED:
-          return 2;
         case TransactionType.ENTRY_REVERSAL:
+          return 0;
+        case TransactionType.ENTRY_ADDED:
+          return 1;
+        case TransactionType.ENTRY_UPDATED:
+          return 2;
+        case TransactionType.ENTRY_DELETED:
           return 3;
         default:
           return 4;
