@@ -9,7 +9,7 @@
  * @module utils/transactionStore
  */
 
-import { Transaction, TransactionType } from '../types';
+import { Transaction } from '../types';
 import { STORAGE_KEYS } from '../constants';
 
 import { DataStore, getDefaultDataStore } from './datastore';
@@ -121,33 +121,16 @@ export const appendTransaction = (tx: Transaction, store?: DataStore): void => {
   // Prevent duplicate ids
   if (txs.some((t) => t.id === tx.id)) return;
   txs.push(tx);
-  // Keep transactions sorted by timestamp
-  // Sort by timestamp ascending. If timestamps are equal, use a deterministic
-  // tie-breaker by transaction type so that reversals and corrections display
-  // in a consistent order in the UI (history view displays in reverse).
+  // Keep transactions sorted by timestamp (ascending). If timestamps are equal,
+  // preserve the existing insertion order so the transaction that was appended
+  // earlier remains earlier in the array. This allows callers to ensure display
+  // order by appending transactions in the desired sequence without relying on
+  // type-based priorities.
+  const indexById = new Map(txs.map((t, i) => [t.id, i]));
   txs.sort((a, b) => {
     if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
-
-    const typePriority = (t: TransactionType) => {
-      // Lower numbers sort earlier. For identical timestamps we want reversals to
-      // come before corrections in storage so that the UI (which sorts by
-      // timestamp descending) will display the reversal first. Therefore reversals
-      // get the highest precedence (lowest numeric value).
-      switch (t) {
-        case TransactionType.ENTRY_REVERSAL:
-          return 0;
-        case TransactionType.ENTRY_ADDED:
-          return 1;
-        case TransactionType.ENTRY_UPDATED:
-          return 2;
-        case TransactionType.ENTRY_DELETED:
-          return 3;
-        default:
-          return 4;
-      }
-    };
-
-    return typePriority(a.type) - typePriority(b.type);
+    // Fallback to original insertion index for tie-breaker
+    return (indexById.get(a.id) ?? 0) - (indexById.get(b.id) ?? 0);
   });
   saveTransactions(txs, s);
 };
