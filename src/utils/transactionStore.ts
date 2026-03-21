@@ -9,7 +9,7 @@
  * @module utils/transactionStore
  */
 
-import { Transaction } from '../types';
+import { Transaction, TransactionType } from '../types';
 import { STORAGE_KEYS } from '../constants';
 
 import { DataStore, getDefaultDataStore } from './datastore';
@@ -122,7 +122,29 @@ export const appendTransaction = (tx: Transaction, store?: DataStore): void => {
   if (txs.some((t) => t.id === tx.id)) return;
   txs.push(tx);
   // Keep transactions sorted by timestamp
-  txs.sort((a, b) => a.timestamp - b.timestamp);
+  // Sort by timestamp ascending. If timestamps are equal, use a deterministic
+  // tie-breaker by transaction type so that reversals and corrections display
+  // in a consistent order in the UI (history view displays in reverse).
+  txs.sort((a, b) => {
+    if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+
+    const typePriority = (t: TransactionType) => {
+      switch (t) {
+        case TransactionType.ENTRY_ADDED:
+          return 0;
+        case TransactionType.ENTRY_UPDATED:
+          return 1;
+        case TransactionType.ENTRY_DELETED:
+          return 2;
+        case TransactionType.ENTRY_REVERSAL:
+          return 3;
+        default:
+          return 4;
+      }
+    };
+
+    return typePriority(a.type) - typePriority(b.type);
+  });
   saveTransactions(txs, s);
 };
 
